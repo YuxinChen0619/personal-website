@@ -219,6 +219,11 @@ export const VIDEOS = [
 ]
 
 /* ── WEBSITE & WRITING ───────────────────────────────── */
+/* href 是占位：三个站点还没有可公开的正式地址，一律先指向 '#'，
+   面板上的 OPEN PROJECT 同时带 aria-disabled。拿到真实链接后只改这三处。
+   glow 是每张封面的主色，用来喂 .wsc__glow 的背景光晕 —— 原来那三个值
+   （#f6e9c8 / #f7dcd8 / #dceccd）是掺了大量白的浅色，铺在 --paper #f8f7fa 上
+   几乎没有色差，看不出光晕；这里往各自封面的主色方向加饱和度。 */
 export const WEBSITES = [
   {
     no: '01',
@@ -227,7 +232,8 @@ export const WEBSITES = [
     kicker: 'DATA JOURNALISM · WEB',
     desc: '中国咖啡市场在消费降级、价格竞争与情绪经济之间的增长逻辑。',
     cover: 'coffee',
-    glow: '#f6e9c8',
+    glow: '#f2d49a', // 咖啡封面的焦糖黄
+    href: '#',
   },
   {
     no: '02',
@@ -236,7 +242,8 @@ export const WEBSITES = [
     kicker: 'FEATURE · WEB',
     desc: '短剧出海：内容工业化生产与海外分发链路的一次拆解。',
     cover: 'drama',
-    glow: '#f7dcd8',
+    glow: '#f0bfa4', // 短剧封面的暖橘
+    href: '#',
   },
   {
     no: '03',
@@ -245,7 +252,8 @@ export const WEBSITES = [
     kicker: 'EDITORIAL · 图文',
     desc: '公众号长图文写作与版式：把调研转成可读、可传播的叙事。',
     cover: 'wechat',
-    glow: '#dceccd',
+    glow: '#d7e3a4', // 图文封面的草绿
+    href: '#',
   },
 ]
 

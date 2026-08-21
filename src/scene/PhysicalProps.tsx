@@ -10,6 +10,7 @@ import {
   Vector3,
   type Texture,
 } from 'three'
+import { ID_CARD_SIZE } from './decalSpecs'
 import {
   FIND_A_WORD_DEPTH,
   FIND_A_WORD_FACE_Z,
@@ -879,13 +880,42 @@ export function PosterCardModel({
 
 const POLAROID_SOURCE_SIZE = [760, 704] as const
 
-/** Pixel rectangle in the unmodified 760x704 source image, measured from top-left. */
-export type PolaroidCrop = Readonly<{
+/** Pixel rectangle in an unmodified source image, measured from its top-left. */
+export type PixelCrop = Readonly<{
   x: number
   y: number
   width: number
   height: number
 }>
+
+/**
+ * 从整张源图里裁一块出来，**不重采样、不拉伸**。
+ *
+ * three 的 UV 原点在左下，量出来的像素矩形原点在左上，所以 offset 的 v 要翻。
+ * 用 repeat/offset 直接选像素：贴到几何上时把面片的宽高比做成和 crop 一样，
+ * 就一个像素都不会被拉长。
+ */
+function useCroppedTexture(
+  url: string,
+  source: readonly [width: number, height: number],
+  crop: PixelCrop,
+) {
+  const full = useTexture(url)
+  const [sourceWidth, sourceHeight] = source
+  const { x, y, width, height } = crop
+  const cropped = useMemo(() => {
+    const texture = full.clone()
+    texture.wrapS = ClampToEdgeWrapping
+    texture.wrapT = ClampToEdgeWrapping
+    texture.repeat.set(width / sourceWidth, height / sourceHeight)
+    texture.offset.set(x / sourceWidth, 1 - (y + height) / sourceHeight)
+    configurePaperTexture(texture)
+    return texture
+  }, [full, height, sourceHeight, sourceWidth, width, x, y])
+
+  useEffect(() => () => cropped.dispose(), [cropped])
+  return cropped
+}
 
 /**
  * Real photograph regions inside the supplied three-card composite.
@@ -899,30 +929,7 @@ export const POLAROID_CROPS = {
   friends: { x: 290, y: 70, width: 240, height: 190 },
   beach: { x: 65, y: 325, width: 225, height: 185 },
   camera: { x: 465, y: 350, width: 205, height: 190 },
-} as const satisfies Record<string, PolaroidCrop>
-
-function usePolaroidCrop(crop: PolaroidCrop) {
-  const source = useTexture('/assets/obj2/polaroids.webp')
-  const { x, y, width, height } = crop
-  const cropped = useMemo(() => {
-    const texture = source.clone()
-    const [sourceWidth, sourceHeight] = POLAROID_SOURCE_SIZE
-
-    // Three uses bottom-left UVs, while the measured source rectangles use the
-    // normal image top-left origin.  Repeat/offset selects the pixels directly;
-    // the physical print plane below uses the same width/height ratio, so there
-    // is no horizontal or vertical stretching.
-    texture.wrapS = ClampToEdgeWrapping
-    texture.wrapT = ClampToEdgeWrapping
-    texture.repeat.set(width / sourceWidth, height / sourceHeight)
-    texture.offset.set(x / sourceWidth, 1 - (y + height) / sourceHeight)
-    configurePaperTexture(texture)
-    return texture
-  }, [height, source, width, x, y])
-
-  useEffect(() => () => cropped.dispose(), [cropped])
-  return cropped
-}
+} as const satisfies Record<string, PixelCrop>
 
 /**
  * One independently movable, full-thickness Polaroid card.
@@ -937,10 +944,10 @@ export function PolaroidCardModel({
   size,
 }: {
   name: string
-  crop: PolaroidCrop
+  crop: PixelCrop
   size: readonly [width: number, height: number]
 }) {
-  const texture = usePolaroidCrop(crop)
+  const texture = useCroppedTexture('/assets/obj2/polaroids.webp', POLAROID_SOURCE_SIZE, crop)
   const [cardWidth, cardHeight] = size
   const sourceAspect = crop.width / crop.height
   const maxPhotoWidth = cardWidth - 0.046
@@ -1084,17 +1091,198 @@ export function DoorTrayModel({ content = 'paper' }: { content?: DoorTrayContent
   )
 }
 
+/* ── ABOUT 工牌 ───────────────────────────────────────────── */
+
+/** 工牌源图尺寸。下面每一个几何数字都由这张图的像素反算，换素材只改这里。 */
+const ID_CARD_SOURCE_SIZE = [430, 760] as const
+
+/**
+ * 源图 1px 折算多少世界单位。
+ *
+ * 工牌原来是贴花图集里的一张平面，整张 430px 铺满 ID_CARD_SIZE 的宽度
+ * （= 0.38 门宽，推导见 decalSpecs）。做成实体后**继续用同一把尺子**，
+ * 牌子才落在原处，门贴挂钩也才还能穿过吊环的孔。
+ */
+const ID_CARD_PX = ID_CARD_SIZE[0] / ID_CARD_SOURCE_SIZE[0]
+
+/**
+ * 卡体厚度。
+ *
+ * 拍立得取 0.024，那是相纸加一层卡纸托板；PVC 工牌套比它薄，但也不能薄到
+ * 只剩一条缝——那就等于换个方式做回贴纸。上限由工牌自己给：印刷吊环的环带
+ * 在源图里宽约 21px = 0.017，注塑件不会比自己的环带还厚。取 0.014，
+ * 是拍立得的 58%、贴花层间距 0.0008 的 17 倍，侧棱一眼就是实心的。
+ */
+const ID_CARD_THICKNESS = 0.014
+
+/**
+ * 挤出倒角，取 3px。
+ *
+ * ExtrudeGeometry 的 bevelSize 是**向轮廓外**长的：正反两个端面停在轮廓上，
+ * 中段鼓出 bevelSize。所以下面挤的是「卡体四周各收 3px」的芯，倒角再把腰
+ * 撑回真实卡面，端面正好比卡面小一圈 3px —— 印刷面照同样收 3px 去裁，
+ * 就严丝合缝地铺在端面上，边上不会翘出一圈纸片。
+ * 0.00245 的倒角占满 0.014 侧棱的两端，斜看时吃得到一条连续高光。
+ */
+const ID_CARD_BEVEL = 3 * ID_CARD_PX
+
+/** 卡面圆角：源图左上角实测从 (29,138) 收到 (1,170)，拟合半径 33px。 */
+const ID_CARD_CORNER = 33 * ID_CARD_PX
+
+/** 卡体轮廓（源图像素，左上原点）。上面 0–139 那一段是吊环，不算卡体。 */
+const ID_CARD_BODY: PixelCrop = { x: 0, y: 140, width: 430, height: 620 }
+
+/** 印刷面 = 挤出用的芯：卡体四周各收 3px，与倒角后的端面重合。 */
+const ID_CARD_PRINT: PixelCrop = { x: 3, y: 143, width: 424, height: 614 }
+
+/**
+ * 吊环。实测环体占 x 155–273 / y 0–139，孔在 x 177–252 / y 25–108。
+ * 裁切框对孔心左右各留 7px 余量；下缘压到 146、与卡体重叠 6px ——
+ * 那一条埋在卡体内部，接缝看不出来，也不会在环与卡之间露出一道缝。
+ */
+const ID_CARD_RING: PixelCrop = { x: 148, y: 0, width: 133, height: 146 }
+
+/** 把源图矩形换算成「以整张工牌中心为原点、+Y 向上」的局部矩形。 */
+function idCardRect(crop: PixelCrop) {
+  const [sourceWidth, sourceHeight] = ID_CARD_SOURCE_SIZE
+  return {
+    width: crop.width * ID_CARD_PX,
+    height: crop.height * ID_CARD_PX,
+    x: (crop.x + crop.width / 2 - sourceWidth / 2) * ID_CARD_PX,
+    y: (sourceHeight / 2 - (crop.y + crop.height / 2)) * ID_CARD_PX,
+  }
+}
+
+const ID_CARD_BODY_RECT = idCardRect(ID_CARD_BODY)
+const ID_CARD_PRINT_RECT = idCardRect(ID_CARD_PRINT)
+const ID_CARD_RING_RECT = idCardRect(ID_CARD_RING)
+
+/** 居中的圆角矩形轮廓，供挤出用。 */
+function makeRoundedRectShape(width: number, height: number, radius: number): Shape {
+  const halfW = width / 2
+  const halfH = height / 2
+  const r = Math.min(radius, halfW, halfH)
+  const shape = new Shape()
+  shape.moveTo(-halfW + r, -halfH)
+  shape.lineTo(halfW - r, -halfH)
+  shape.absarc(halfW - r, -halfH + r, r, -Math.PI / 2, 0, false)
+  shape.lineTo(halfW, halfH - r)
+  shape.absarc(halfW - r, halfH - r, r, 0, Math.PI / 2, false)
+  shape.lineTo(-halfW + r, halfH)
+  shape.absarc(-halfW + r, halfH - r, r, Math.PI / 2, Math.PI, false)
+  shape.lineTo(-halfW, -halfH + r)
+  shape.absarc(-halfW + r, -halfH + r, r, Math.PI, (3 * Math.PI) / 2, false)
+  return shape
+}
+
+/**
+ * ABOUT 工牌，有真实厚度的实体。
+ *
+ * 局部原点 = 整张工牌（吊环 + 卡体）的中心，与它取代的那张贴花中心重合；
+ * z=0 是朝门的那一面，实体一律朝 +Z 长出去，和其它门上物件一致。
+ *
+ * 三块各有各的道理：
+ *   · 卡体 —— 圆角矩形挤出件。用挤出而不是 RoundedBox：卡面圆角 33px≈0.027，
+ *     而 RoundedBox 的圆角受厚度限制最多 0.007，四个角会比印刷图方一圈。
+ *   · 印刷面 —— 只裁源图的卡体那一段（不含吊环），宽高比与裁切框一致，不拉伸。
+ *   · 吊环 —— 必须留成薄薄一片 alpha 抠图。它是个带孔的塑料环，换成实心盒子
+ *     就把孔堵死了，门贴挂钩再也穿不过去。
+ *
+ * 吊环片放在卡体的中面（z = 厚度/2）。挂钩的手臂在门内侧内容组的 z = −0.0025、
+ * 钩尖在 +0.0255，工牌卡背贴在 +0.0075（见 decalSpecs 的 ID_CARD_AT），环面落在
+ * +0.0145：手臂被环带挡在后面，钩尖从孔里探到牌子前面 0.011，穿孔这件事才成立。
+ * 也因此 Props.tsx 给它 hoverLift=0 —— 牌子是**穿在**钩子上的，抬不起来。
+ */
+export function IdCardModel() {
+  const printMap = useCroppedTexture(
+    '/assets/obj/idcard2.webp',
+    ID_CARD_SOURCE_SIZE,
+    ID_CARD_PRINT,
+  )
+  const ringMap = useCroppedTexture('/assets/obj/idcard2.webp', ID_CARD_SOURCE_SIZE, ID_CARD_RING)
+
+  const bodyGeometry = useMemo(() => {
+    // 挤的是收 3px 的芯，倒角再向外把腰撑回 ID_CARD_BODY_RECT / 33px 圆角
+    const geometry = new ExtrudeGeometry(
+      makeRoundedRectShape(
+        ID_CARD_PRINT_RECT.width,
+        ID_CARD_PRINT_RECT.height,
+        ID_CARD_CORNER - ID_CARD_BEVEL,
+      ),
+      {
+        depth: ID_CARD_THICKNESS - ID_CARD_BEVEL * 2,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        bevelSize: ID_CARD_BEVEL,
+        bevelThickness: ID_CARD_BEVEL,
+        curveSegments: 8,
+        steps: 1,
+      },
+    )
+    // 挤出件的 z 是 −bevelThickness … depth+bevelThickness，抬回 0 … 厚度
+    geometry.translate(0, 0, ID_CARD_BEVEL)
+    return geometry
+  }, [])
+
+  useEffect(() => () => bodyGeometry.dispose(), [bodyGeometry])
+
+  return (
+    <group name="IdCardModel">
+      {/* 卡体故意比印刷面更冷更亮、粗糙度低一档：正面被印刷面盖住，
+          只有那一圈 0.014 的侧棱露着本色，材质不同边才读得出来 */}
+      <mesh
+        {...SHADOWS}
+        name="IdCard_Body"
+        geometry={bodyGeometry}
+        position={[ID_CARD_BODY_RECT.x, ID_CARD_BODY_RECT.y, 0]}
+      >
+        <meshStandardMaterial color="#eef2f3" roughness={0.42} metalness={0.04} />
+      </mesh>
+      {/* alphaTest 取 0.5 而不是 0.08：和贴花图集同一个理由 ——
+          0.08 在缩得最狠的 mip 上会让轮廓整整胖一圈，吊环的孔更是会糊死 */}
+      <mesh
+        {...SHADOWS}
+        name="IdCard_Print"
+        position={[ID_CARD_PRINT_RECT.x, ID_CARD_PRINT_RECT.y, ID_CARD_THICKNESS + 0.0012]}
+      >
+        <planeGeometry args={[ID_CARD_PRINT_RECT.width, ID_CARD_PRINT_RECT.height]} />
+        <meshStandardMaterial
+          map={printMap}
+          roughness={0.9}
+          metalness={0}
+          alphaTest={0.5}
+          alphaToCoverage
+        />
+      </mesh>
+      <mesh
+        {...SHADOWS}
+        name="IdCard_Ring"
+        position={[ID_CARD_RING_RECT.x, ID_CARD_RING_RECT.y, ID_CARD_THICKNESS / 2]}
+      >
+        <planeGeometry args={[ID_CARD_RING_RECT.width, ID_CARD_RING_RECT.height]} />
+        <meshStandardMaterial
+          map={ringMap}
+          roughness={0.5}
+          metalness={0.04}
+          alphaTest={0.5}
+          alphaToCoverage
+        />
+      </mesh>
+    </group>
+  )
+}
+
 /**
  * The self-adhesive door hook the ID badge hangs from.
  *
  * The reference shot has a real wall hook above the badge: a plate stuck on the
  * door, an arm running down it, and a J-curl that comes forward through the
- * badge's ring. The badge itself is a flat cut-out in the decal atlas, so the
- * illusion only holds if the arm crosses the badge plane *inside* the printed
- * ring's hole — hence the exact numbers below:
+ * badge's ring. The badge is now a real object (IdCardModel), but the illusion
+ * still rests on the same thing — the arm has to cross the badge's ring plane
+ * *inside* the hole — hence the exact numbers below:
  *
  *   local origin = centre of the plate's back face, sitting on the door;
- *   +Z leaves the door, so the badge decal plane is at z = +0.0061 and the arm
+ *   +Z leaves the door, so the badge's ring plane is at z = +0.019 and the arm
  *   stays at z = 0.002 (behind it, hidden by the printed ring band) until the
  *   curl carries it out to z = 0.030 in front, inside the hole.
  *

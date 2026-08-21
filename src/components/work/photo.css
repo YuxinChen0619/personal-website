@@ -11,7 +11,8 @@
 .pw__persp {
   position: absolute;
   inset: 0;
-  perspective: 1150px;
+  /* 950 而不是 1150：和下面的 -12deg 一起把深度线索大致翻倍，1150 时整面墙看着是平的 */
+  perspective: 950px;
   perspective-origin: 46% 48%;
 }
 
@@ -23,7 +24,8 @@
   height: 0;
   transform-style: preserve-3d;
   will-change: transform;
-  rotate: y -7deg;
+  /* 配 perspective 950：一条行线横跨 1440 大约抬升 129px（约 5°），-7deg 时几乎看不出斜面 */
+  rotate: y -12deg;
 }
 
 .pw__cell {

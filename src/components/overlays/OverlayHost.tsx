@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, type MouseEvent, type PointerEvent } from 'react'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { useStore, type Overlay } from '../../store'
 import { captureOpener, resolveRestoreTarget } from './overlayFocus'
@@ -27,6 +27,19 @@ const TITLES = {
 } as const
 
 const TITLE_ID = 'overlay-title'
+
+/**
+ * 算「空白」的类名。
+ *
+ * 不能只认 .ov：ABOUT 的 .idc 是一个几乎占满宽度的包裹层，卡片上方那段挂绳
+ * 区域落在它身上而不是 .ov 上；SKILLS 的 .sk 同理，卡片四周的空档属于它。
+ * 这些包裹层本身没有任何可视内容，点上去用户的意思就是「点空白」。
+ */
+const SCRIM_CLASSES = ['ov', 'idc', 'sk']
+
+function isScrim(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && SCRIM_CLASSES.some((c) => target.classList.contains(c))
+}
 
 /** 场景状态机记录的入口类型；store 尚未提供时返回 null，回退到导航按钮 */
 function readOverlaySource(): 'hotspot' | 'nav' | null {
@@ -77,6 +90,32 @@ export default function OverlayHost() {
     resolveRestoreTarget(lastIdRef.current, source, kind)?.focus({ preventScroll: true })
   })
 
+  /*
+   * 点空白处关闭。
+   *
+   * 判据是「命中的正是 .ov 本身」——四个浮层的根节点都是 .ov（整屏 grid，
+   * 内容居中），点到卡片、按钮、拖拽物件时命中的是子节点，只有点在四周的
+   * 空白上才会落到 .ov 自己身上。作品子页走的是另一条 .wv 分支，不会有 .ov，
+   * 天然排除在外（再加一道 workView 判断兜底，它有自己的「返回文件夹」）。
+   *
+   * 必须 pointerdown 和 click 两次都落在空白上才算数：click 事件的 target 取
+   * 按下与抬起的最近公共祖先，只判 click 的话，从卡片上按下、松手时滑到空白，
+   * 会得到 target = .ov，于是拖一下卡片就把浮层关掉了。
+   */
+  const downOnScrim = useRef(false)
+
+  const onScrimDown = useCallback((e: PointerEvent) => {
+    downOnScrim.current = isScrim(e.target)
+  }, [])
+
+  const onScrimClick = useCallback((e: MouseEvent) => {
+    if (!downOnScrim.current || !isScrim(e.target)) return
+    downOnScrim.current = false
+    const st = useStore.getState()
+    if (st.workView) return
+    st.closeOverlay()
+  }, [])
+
   // Escape：作品子页面先退回文件夹，再按一次才关闭整个浮层
   const onEscape = useCallback(() => {
     const st = useStore.getState()
@@ -110,6 +149,8 @@ export default function OverlayHost() {
         aria-modal="true"
         aria-labelledby={TITLE_ID}
         tabIndex={-1}
+        onPointerDown={onScrimDown}
+        onClick={onScrimClick}
       >
         <h2 id={TITLE_ID} className="ovh__title">
           {TITLES[active]}

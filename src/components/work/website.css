@@ -38,17 +38,30 @@
   position: absolute;
   left: 50%;
   top: 42%;
-  width: 74vw;
-  height: 58vh;
+  /* 原来 74vw × 58vh 的椭圆到 72% 就已经全透明，铺在 --paper #f8f7fa 上的有效
+     色域不足视口的 1%，等于没有光晕。放大到 112vw × 118vh 才垫得住整块画面；
+     min() 的 1500 × 1000 是上限，免得超宽屏上无限拉伸成一片死色。 */
+  width: min(112vw, 1500px);
+  height: min(118vh, 1000px);
   transform: translate(-50%, -50%);
-  background: radial-gradient(closest-side, var(--glow), transparent 72%);
-  opacity: 0.85;
-  filter: blur(14px);
+  /* 44% 处用 color-mix 补一个 58% 浓度的中途站，避免实色直接掉到透明的硬边 */
+  background: radial-gradient(
+    closest-side,
+    var(--glow) 0%,
+    color-mix(in srgb, var(--glow) 58%, transparent) 44%,
+    transparent 100%
+  );
+  opacity: 1;
+  /* 径向渐变本身就是连续的，不需要再糊一遍。blur(14px) 是一整屏的滤镜 pass，
+     救不了一个本来就太淡的渐变，只白白吃合成性能，所以直接去掉。 */
+  filter: none;
   pointer-events: none;
   /* 颜色本身由 .wsc 上的 --glow 过渡驱动，这里不再过渡不可插值的 background */
 }
 
 .wsc__ring {
+  /* 卡片宽度提到 ring 上：面板要按封面的实际宽度定位，两边得读同一个值 */
+  --card-w: clamp(280px, 40vw, 532px);
   position: relative;
   z-index: 3;
   flex: 1;
@@ -61,9 +74,13 @@
 
 .wsc__spin {
   position: relative;
-  width: clamp(280px, 40vw, 532px);
+  width: var(--card-w);
   aspect-ratio: 16 / 10.2;
   transform-style: preserve-3d;
+  /* 环心后退量 = WebsiteCarousel 里的 RADIUS(560)，两处必须一致，卡片
+     rotateY + translateZ(560) 之后才正好落回 z≈0。原来写在内联 style 上，
+     特异性压过任何选择器，下面那条展开态规则根本推不动它。 */
+  transform: translateZ(-560px);
   transition: transform 0.78s cubic-bezier(0.24, 0.94, 0.24, 1);
 }
 
@@ -85,8 +102,11 @@
     transform 0.72s cubic-bezier(0.24, 0.94, 0.24, 1),
     opacity 0.62s var(--ease-out),
     filter 0.62s var(--ease-out);
+  /* 邻片是**远处的一片淡影**，不是并排的第二张卡：参考里它们退到画幅两侧、
+     几乎只剩一道轮廓。曾把环角从 78° 收到 50° 想让它们露出正面，结果三张
+     贴成了一个折屏盒子，反而离参考更远 —— 邻片就该远、就该淡。 */
   opacity: 0.44;
-  filter: saturate(0.18) brightness(1.16) blur(6px);
+  filter: saturate(0.18) brightness(1.06) blur(6px);
 }
 
 .wsc__card[data-active='true'] {
@@ -94,8 +114,9 @@
   filter: none;
 }
 
-/* 转过 88° 之后就要看见卡片背面了；这里没有可靠的 backface-visibility 可用
-   （WebKit 不认，见 design.css 的说明），直接把它淡掉 */
+/* 转过 76° 之后就要看见卡片背面了（阈值怎么来的见 WebsiteCarousel 的 data-gone）；
+   这里没有可靠的 backface-visibility 可用（WebKit 不认，见 design.css 的说明），
+   直接把它淡掉 */
 .wsc__card[data-gone='true'] {
   opacity: 0;
 }
@@ -126,42 +147,23 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.wsc__openBtn {
-  position: absolute;
-  left: 50%;
-  bottom: 15%;
-  transform: translate(-50%, 12px);
-  padding: 9px 18px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.94);
-  color: var(--ink);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity 0.4s var(--ease-out),
-    transform 0.4s var(--ease-out);
-  box-shadow: 0 6px 18px rgba(20, 30, 50, 0.18);
-}
-
-.wsc__openBtn[data-show='true'] {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-/* 展开面板：卡片左移 + 右侧白板 */
+/* 展开面板：卡片左移 + 右侧白板。
+   rotateY(var(--rot)) 是死代码 —— 这个组件从没设过 --rot，只会解析成 0deg。 */
 .wsc__ring[data-open='true'] .wsc__spin {
-  transform: translateZ(-520px) translateX(-16%) rotateY(var(--rot, 0deg));
+  transform: translateZ(-520px) translateX(-16%);
 }
 
 .wsc__panel {
   position: absolute;
-  left: 50%;
+  /* 封面展开后左移 16%、退到 z=-520（perspective 1500 下放大 1.027），右缘落在
+     中心 + 0.349×卡宽；面板左缘取 中心 + 0.30×卡宽，两者差 26px（按卡宽上限
+     532px 算），面板正好塞进封面背后一小截，既不留缝也不再盖住封面 45%、
+     把 CTA 切掉一半。 */
+  left: calc(50% + var(--card-w, 532px) * 0.3);
   top: 50%;
   width: clamp(250px, 30vw, 400px);
-  transform: translate(6%, -50%) translateX(34px);
+  /* 收起时藏在封面那一侧，展开是「从封面后面向右抽出」；原来是向左滑，方向反了 */
+  transform: translate(-40px, -50%);
   background: #fff;
   border-radius: 0 8px 8px 0;
   padding: clamp(22px, 2.8vw, 40px) clamp(20px, 2.6vw, 38px);
@@ -177,7 +179,7 @@
 .wsc__panel[data-show='true'] {
   opacity: 1;
   pointer-events: auto;
-  transform: translate(6%, -50%) translateX(0);
+  transform: translate(0, -50%);
 }
 
 .wsc__kicker {
@@ -206,12 +208,21 @@
   color: var(--ink-soft);
 }
 
-.wsc__note {
-  display: block;
+/* 面板里的出口按钮，取代原来那句「CLICK THE IMAGE…」的静态说明。
+   胶囊样式沿用原先贴在封面上那一颗（已删，避免同一动作出现两个入口），
+   去掉绝对定位改成随文流；深底白字，在白面板上才是真正的主按钮。
+   global.css 没有 a 的下划线复位，这里要自己关掉。 */
+.wsc__open {
+  display: inline-flex;
   margin-top: 1.9em;
-  font-size: 9.6px;
-  letter-spacing: 0.15em;
-  color: var(--ink-faint);
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  text-decoration: none;
 }
 
 /* 下方文字与控件 */

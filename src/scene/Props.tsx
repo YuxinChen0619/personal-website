@@ -1,8 +1,9 @@
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useRef, type ReactNode } from 'react'
+import { Suspense, useEffect, useRef, type ReactNode } from 'react'
 import { Vector3, type Group } from 'three'
 import { introTime } from '../experience/experienceClock'
 import { useSceneCapabilities } from '../store'
+import { ID_CARD_AT, ID_CARD_SIZE } from './decalSpecs'
 import {
   activateHotspot,
   registerHotspotAnchor,
@@ -26,6 +27,7 @@ import {
   DoorTrayModel,
   FindAWordBoardModel,
   GuitarModel,
+  IdCardModel,
   POLAROID_CROPS,
   PolaroidCardModel,
   PosterCardModel,
@@ -110,6 +112,25 @@ const TRAY_B: PropSpec = {
   name: 'Prop_Door01_TrayB',
   from: { dy: -0.08, scale: 0.9 },
   at_ms: 1480,
+}
+
+/**
+ * ABOUT 工牌。原来是贴花图集里的一张平面，现在是有厚度的实体（IdCardModel）。
+ *
+ * 入场窗口整段藏在门后：门 t≈1076ms 才转过 90°，在那之前门内侧背对镜头，
+ * 工牌根本看不见。所以从 860（第一批物件的时间窗起点）起、220ms 落位，
+ * 正好在门转正的那一刻收工，和它当贴花时「门一转过来就在那儿」看起来一样。
+ * 起点抬高 0.05：它是**挂**上去的，最后那一下是落到钩子上。
+ */
+const ID_CARD: PropSpec = {
+  name: 'Prop_Door02_IdCard',
+  url: '/assets/obj/idcard2.webp',
+  at: ID_CARD_AT,
+  width: ID_CARD_SIZE[0],
+  from: { dy: 0.05, scale: 0.94 },
+  at_ms: 860,
+  dur: 220,
+  ease: 'outSine',
 }
 
 const DOOR4_PHOTO_FRIENDS: PropSpec = {
@@ -327,22 +348,50 @@ export function CavityProps() {
   )
 }
 
-/** 打开的第二扇门内侧：打字机背部磁吸在门板上，并继承铰链矩阵。 */
+/**
+ * 打开的第二扇门内侧：打字机背部磁吸在门板上，工牌挂在门贴挂钩上，
+ * 两件都继承铰链矩阵。
+ */
 export function DoorTwoMountedProps() {
   const caps = useSceneCapabilities()
   return (
-    <PhysicalItem
-      spec={TYPEWRITER}
-      plane="xy"
-      position={[0.015, -0.95, 0.018]}
-      bounds={DOOR_FACE_BOUNDS}
-      footprint={[0.72, 0.62]}
-      enabled={caps.drag}
-      hotspot="contact"
-      hotspotOffset={[0, -0.04, -0.012]}
-    >
-      <TypewriterModel />
-    </PhysicalItem>
+    <>
+      <PhysicalItem
+        spec={TYPEWRITER}
+        plane="xy"
+        position={[0.015, -0.95, 0.018]}
+        bounds={DOOR_FACE_BOUNDS}
+        footprint={[0.72, 0.62]}
+        enabled={caps.drag}
+        hotspot="contact"
+        hotspotOffset={[0, -0.04, -0.012]}
+      >
+        <TypewriterModel />
+      </PhysicalItem>
+
+      {/* 工牌要等自己那张贴图解码完才能裁出印刷面与吊环，单独用 Suspense 兜住，
+          纹理慢的时候不会连打字机一起从门上消失 */}
+      <Suspense fallback={null}>
+        <PhysicalItem
+          spec={ID_CARD}
+          plane="xy"
+          position={ID_CARD_AT}
+          bounds={DOOR_FACE_BOUNDS}
+          footprint={ID_CARD_SIZE}
+          enabled={caps.drag}
+          hotspot="about"
+          // 反馈圆环留在牌子后面（内容组 z = 0.0075 − 0.0095 = −0.002，
+          // 门面与卡背之间），不跟卡体抢指针；点击与拖拽都由实体接管
+          hotspotOffset={[0, 0, -0.0095]}
+          // 牌子是**穿在**挂钩上的：一抬起来钩尖就跑到吊环后面去了，
+          // 穿孔立刻穿帮。反馈只留缩放，和贴柜腔后壁的寻字板同一处理
+          hoverLift={0}
+          hoverScale={1.03}
+        >
+          <IdCardModel />
+        </PhysicalItem>
+      </Suspense>
+    </>
   )
 }
 

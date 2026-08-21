@@ -44,6 +44,15 @@ export default function ExperienceOrchestrator() {
     let running = false
     /** 开场是否已经起跑。起跑之后就一路播到 INTRO_END，不因浮层打断而冻住 */
     let started = false
+    /**
+     * 用户在开场途中给出输入后的快进倍率，1 = 正常速度。
+     *
+     * 为什么是「快进时钟」而不是「让状态机跳到 idle」：柜门角度、物件落位、
+     * 相机全都读 introTime()，状态机只决定「能不能点」。若只把状态机推到 idle，
+     * caps.animating 会立刻变 false、frameloop 掉回 demand，柜门就永远停在半开。
+     * 拨快同一个时钟则三者同步收尾，状态机沿事件表自己走到 idle，不需要额外事件。
+     */
+    let skipRate = 1
 
     const stop = () => {
       if (raf) cancelAnimationFrame(raf)
@@ -69,7 +78,7 @@ export default function ExperienceOrchestrator() {
       // 卡帧时不要一次跳过整段；?slow=N 在这里除一次，
       // 相机/柜门/物件/状态推进都读同一个时钟，所以整条开场是**同步**拉长的。
       // （之前只缩放了事件时刻，视觉照常速播，等于把时间线拆成了两套）
-      advanceIntro(Math.min(now - last, 64) / scale)
+      advanceIntro((Math.min(now - last, 64) * skipRate) / scale)
       last = now
       flush()
       raf = requestAnimationFrame(tick)
@@ -103,6 +112,27 @@ export default function ExperienceOrchestrator() {
 
     const unsub = useStore.subscribe(sync)
 
+    /*
+     * 开场途中收到用户输入：把剩下的时间线压缩到 SKIP_MS 内播完。
+     *
+     * 在此之前，开场四个状态的 CAPABILITIES 里 hotspots / drag 都是 false，
+     * 而且没有任何出口 —— 用户从柜体出现到 4.63s 之间的每一次点击都被静默
+     * 吞掉，既没有反馈也没法让它快一点。这就是那几秒「点不动」。
+     *
+     * 不直接 seek 到终点是为了不让柜门从半开硬跳到全开：压成一段极短的快进，
+     * 读起来是「我点了一下，它赶紧收尾」，而不是掉帧。
+     */
+    const SKIP_MS = 380
+    const hurry = () => {
+      if (skipRate !== 1 || isIntroFrozen()) return
+      if (!started || introTime() >= INTRO_END) return
+      skipRate = Math.max(1, (INTRO_END - introTime()) / SKIP_MS)
+      start()
+    }
+    window.addEventListener('pointerdown', hurry)
+    window.addEventListener('keydown', hurry)
+    window.addEventListener('wheel', hurry, { passive: true })
+
     // 页面隐藏时暂停时钟：回来后从暂停处继续，不会一口气跳完整个开场
     const onVisibility = () => {
       if (document.hidden) stop()
@@ -115,6 +145,9 @@ export default function ExperienceOrchestrator() {
       stop()
       unsub()
       document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('pointerdown', hurry)
+      window.removeEventListener('keydown', hurry)
+      window.removeEventListener('wheel', hurry)
     }
   }, [])
 

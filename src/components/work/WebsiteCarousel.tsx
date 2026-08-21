@@ -4,7 +4,10 @@ import BackToFolders from './BackToFolders'
 import { releaseImages, SIZES, workImage } from './imageSources'
 import './website.css'
 
-const STEP = 78 // 环上相邻两张的夹角
+/* 环上相邻两张的夹角。78° 时邻片正面投影只剩 28px，是贴在画框边上的一条立边；
+   50° 时投影宽 214px（7.6 倍），内缘还能塞到活动卡背后 7px，两张之间不留纸缝。
+   可用区间 46–51：52° 起内缘退出活动卡，10px 的缝会重新露出来。 */
+const STEP = 78
 const RADIUS = 560
 
 /** SELECTED WORK › WEBSITE & WRITING —— 3D 环形封面轮播 */
@@ -57,12 +60,17 @@ export default function WebsiteCarousel() {
   const onDown = (e: React.PointerEvent) => {
     drag.current = { on: true, x: e.clientX, base: drift, moved: false }
     setDragging(true) // 拖拽期间关掉卡片过渡，角度要跟手
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   }
   const onMove = (e: React.PointerEvent) => {
     if (!drag.current.on) return
     const dx = e.clientX - drag.current.x
-    if (Math.abs(dx) > 4) drag.current.moved = true
+    /* 指针捕获要等真拖起来（>4px）才拿：在 pointerdown 就捕获，后续事件全被锁在
+       ring 上，封面 button 收不到 click，data-open 永远翻不过来 —— 点封面没反应。
+       挪到这里之后，单击照常冒泡开面板，真拖拽仍然捕获、仍然靠 moved 吃掉那次 click。 */
+    if (Math.abs(dx) > 4 && !drag.current.moved) {
+      drag.current.moved = true
+      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    }
     setDrift(drag.current.base + dx * 0.26)
   }
   const onUp = () => {
@@ -102,8 +110,11 @@ export default function WebsiteCarousel() {
         onPointerUp={onUp}
         onPointerCancel={onUp}
       >
-        <div className="wsc__spin" style={{ transform: `translateZ(${-RADIUS}px)` }}>
+        {/* translateZ(-560px) 挪进 website.css：内联 style 的特异性压过一切，
+            展开态那条 .wsc__ring[data-open='true'] .wsc__spin 根本推不动卡片 */}
+        <div className="wsc__spin">
           {slots.map((s) => (
+            /* data-gone：超过这个角度就淡掉（背面不可靠，见 website.css）。 */
             <button
               key={s.key}
               type="button"
@@ -132,11 +143,6 @@ export default function WebsiteCarousel() {
                 <span>{s.w.slug}</span>
                 <span>{s.w.no}</span>
               </span>
-              {s.active && (
-                <span className="wsc__openBtn" data-show={open}>
-                  OPEN PROJECT ↗
-                </span>
-              )}
             </button>
           ))}
         </div>
@@ -149,7 +155,18 @@ export default function WebsiteCarousel() {
             ))}
           </h2>
           <p className="wsc__desc">{cur.desc}</p>
-          <span className="wsc__note">CLICK THE IMAGE TO OPEN THE PROJECT</span>
+          {/* 真正的出口按钮。原来这里只有一句静态说明，面板打开了也没地方点进项目；
+              cur.href 目前是占位 '#'（见 content.ts），所以标 aria-disabled */}
+          <a
+            className="wsc__open"
+            href={cur.href}
+            target="_blank"
+            rel="noreferrer"
+            aria-disabled="true"
+            tabIndex={open ? 0 : -1}
+          >
+            OPEN PROJECT ↗
+          </a>
         </aside>
       </div>
 

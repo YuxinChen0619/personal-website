@@ -1,6 +1,7 @@
 import { useReducer, useRef } from 'react'
 import { NOTE_COLORS, SEED_NOTES } from '../../data/content'
 import CloseButton from './CloseButton'
+import ContactTypewriter from './ContactTypewriter'
 import './overlay.css'
 import './contact.css'
 
@@ -286,28 +287,9 @@ export default function ContactBoard() {
               </div>
             ))}
 
-            {/* 打字机 */}
+            {/* 打字机：柜门里那台真实网格，无 WebGL 时自动退回 CSS 平面画 */}
             <div className="cb__machine" aria-hidden>
-              <span className="cb__roller">
-                <i className="cb__knob cb__knob--l" />
-                <i className="cb__knob cb__knob--r" />
-              </span>
-              <span className="cb__levers">
-                <i />
-                <i />
-              </span>
-              <span className="cb__bodyShell">
-                <span className="cb__keys">
-                  {Array.from({ length: 3 }, (_, r) => (
-                    <span key={r} className="cb__keyRow">
-                      {Array.from({ length: r === 2 ? 11 : 12 }, (_, k) => (
-                        <i key={k} />
-                      ))}
-                    </span>
-                  ))}
-                  <span className="cb__space" />
-                </span>
-              </span>
+              <ContactTypewriter />
             </div>
 
             {/* 打字机里的信纸 */}

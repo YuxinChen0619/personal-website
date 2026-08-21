@@ -139,10 +139,20 @@ export const CAPABILITIES: Record<SceneState, Capabilities> = {
   loadError: NONE,
   reveal: { ...NONE, animating: true },
   approach: { ...NONE, animating: true, interruptible: true },
-  opening: { ...NONE, animating: true, interruptible: true },
-  // 物件还在落位，但顶部导航已经可以点了（「可延后到稳定状态再启用」）
-  stagingProps: { ...NONE, nav: true, animating: true, interruptible: true },
-  autoFocusAbout: { ...NONE, nav: true, animating: true, interruptible: true },
+  /*
+   * 从柜门开始翻开的那一刻起，热点与拖拽就全部放开。
+   *
+   * 早先这四个开场状态的 hotspots / drag 都是 false，要等 AUTOFOCUS_END 才开，
+   * 于是用户对着一幅门已开、物件已就位的画面点不动任何东西 —— 动画是给他看的，
+   * 不是拦他的。三条依赖都经得起中途插入：
+   *   · 热点锚点挂在模型节点上，门转到哪它跟到哪；
+   *   · 入场动画只写物件内部的 Reveal 层，拖拽写外层，两层互不覆盖；
+   *   · 点热点后镜头调度器的优先级高于开场时间线，不会被推近拽回去。
+   * freeCamera 仍然留到稳定态：开场镜头还在走位时再让用户缩放会互相打架。
+   */
+  opening: { ...NONE, hotspots: true, drag: true, animating: true, interruptible: true },
+  stagingProps: { ...NONE, hotspots: true, drag: true, nav: true, animating: true, interruptible: true },
+  autoFocusAbout: { ...NONE, hotspots: true, drag: true, nav: true, animating: true, interruptible: true },
   idle: { hotspots: true, drag: true, nav: true, freeCamera: true, interruptible: false, animating: false },
   focusing: { ...NONE, nav: true, animating: true, interruptible: true },
   overlayOpening: { ...NONE, animating: true },

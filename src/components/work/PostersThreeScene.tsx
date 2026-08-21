@@ -32,6 +32,18 @@ const STACK_X = [0, -7, 6, -13, 12, -17, 18, -10, 9, -4, 4]
 const STACK_Y = [28, 32, 24, 35, 19, 29, 38, 22, 34, 26, 31]
 const STACK_ROLL = [8, -5, 6, -9, 10, -12, 7, -6, 11, -8, 4]
 
+/**
+ * 书卡基准宽度。几何本体高 3，正面 pose.scale 为 0.76+0.28=1.04，
+ * 于是正面世界高 = 3 * card * 0.5 * 1.04 = 1.56 * card。
+ * 3:4 画幅下视口是 6.6213 x 8.8284：min(8.8284*0.37, 6.6213*0.55) = 3.267，
+ * 正面卡高 5.096，占画幅高 57.7%，落在 55-60% 的目标区间内。
+ * 主项挂在**高度**上是有意的：视口高只由 fov 与相机距离决定、与宽高比无关，
+ * 因此任何比例下正面卡都稳定在 ~57%；w*0.55 只在细高手机（390px）上兜底，
+ * 防止卡宽越过左右边缘。2.2 / 3.4 的上下限收住极端视口。
+ */
+const cardWidthFor = (viewWidth: number, viewHeight: number) =>
+  MathUtils.clamp(Math.min(viewHeight * 0.37, viewWidth * 0.55), 2.2, 3.4)
+
 const clamp01 = (value: number) => MathUtils.clamp(value, 0, 1)
 const mix = (a: number, b: number, amount: number) => a + (b - a) * amount
 const wrap = (value: number) => ((value % LOOP) + LOOP) % LOOP
@@ -101,15 +113,25 @@ function orbitPose(
   const sin = Math.sin(angle)
   const cos = Math.cos(angle)
   const front = (cos + 1) / 2
-  const radius = MathUtils.clamp(viewWidth * 0.43, 2.65, 7.35) * (1 + boost * 0.2)
-  const depth = MathUtils.clamp(radius * 0.82, 2.55, 5.85) * (1 + boost * 0.14)
+  // 环半径与景深必须跟着书卡尺寸走，否则卡一放大邻卡就插进正面卡里
+  // （只按视口宽算时 radius/card 会从 1.76 塌到 0.87）。
+  // 1.6 是按「正面卡与邻卡重叠 15%」解出来的：竖屏 card 3.267 -> radius 5.227，
+  // 邻卡 2 被推出画幅边缘、邻卡 3 被完全遮挡，屏上正好读到 3 张而不是 6-7 张。
+  // 0.72 给出竖屏 depth 2.352；boost 段的 1.2 / 1.14 加成维持原样。
+  const card = cardWidthFor(viewWidth, viewHeight)
+  const radius = card * 1.6 * (1 + boost * 0.2)
+  const depth = card * 0.72 * (1 + boost * 0.14)
 
   return {
     x: sin * radius,
     // Three 的 Y 轴向上；高速段的近景封面从画面下缘掠过。
-    y: -boost * front * Math.min(viewHeight * 0.22, 1.85) - (1 - front) * 0.1,
+    // 下沉幅度受放大后的卡尺寸约束：boost 段正面半高 3.06，视口半高 4.414，
+    // 下沉超过 1.36 就切边，故取 min(h*0.13=1.148, 1.15)，1.148+3.06=4.21 仍在框内。
+    y: -boost * front * Math.min(viewHeight * 0.13, 1.15) - (1 - front) * 0.1,
     z: -(1 - front) * depth,
-    yaw: -sin * 68 + velocityTilt * 0.45,
+    // 11 张卡的角间距 32.73°，可见邻卡的 sin 为 0.5406：24 系数下它偏转 12.97°，
+    // 够读出立体，又平到像一副摊开的牌（原来的 68 会转到 36.8°，像转盘不像牌）。
+    yaw: -sin * 24 + velocityTilt * 0.45,
     roll: TILT[index % TILT.length] + sin * 7 + velocityTilt,
     scale: (0.76 + front * 0.28) * (1 + boost * front * 0.2),
     // 书卡本身始终不透明；远近关系交给透视、光照与深度缓冲，不用 CSS 式
@@ -121,8 +143,10 @@ function orbitPose(
 function stackPose(index: number): Pose {
   const order = (index - STACK_FRONT_INDEX + POSTERS.length) % POSTERS.length
   return {
-    x: STACK_X[order] * 0.018,
-    y: -0.25 + STACK_Y[order] * 0.007,
+    // 散开量是世界单位、不吃 cardWidth 缩放，所以卡宽从 1.62 涨到 3.267（约 2 倍）后
+    // 系数同比翻倍，书堆才不会缩成一摞对齐的卡；基线 -0.5 同理保持书堆在画幅下半部。
+    x: STACK_X[order] * 0.036,
+    y: -0.5 + STACK_Y[order] * 0.014,
     // 相机位于 +Z；蝴蝶封面是最靠近相机的一张，纸边才会真实遮挡。
     z: 1.05 - order * 0.045,
     yaw: -4 + order * 0.32,
@@ -198,15 +222,18 @@ const PostersThreeScene = forwardRef<PostersThreeApi, PostersThreeSceneProps>(
       const timeline = timelineRef.current
       const time = modeRef.current === 'intro' && timeline ? timeline.time() : Infinity
       const motion = motionRef.current
-      const cardWidth = MathUtils.clamp(width * 0.18, 1.62, 2.48)
+      const cardWidth = cardWidthFor(width, height)
       let phase: PosterMotionPhase = reducedRef.current ? 'reduced' : 'idle'
 
       for (let index = 0; index < POSTERS.length; index++) {
         let pose: Pose
         if (modeRef.current === 'waiting') {
           phase = 'waiting'
+          // 这里**不能**把 opacity 归零：setMeshOpacity 会连带 mesh.visible = false，
+          // 而画布是 alpha:false 压在 #f8f7fa 上，等纹理的这最多 1.2s 就是一张纯白空帧。
+          // 未到货的封面本来就落在 material-4 的 '#ede9e2' 占位色上，等待态因此是
+          // 一副摊开的米色卡阵，封面到齐一张补一张。
           pose = orbitPose(index, REST_OFFSET, width, height)
-          pose.opacity = 0
         } else if (modeRef.current !== 'intro') {
           pose = orbitPose(index, offsetRef.current, width, height, 0, velocityTiltRef.current)
         } else if (time < INTRO_GATHER_AT) {

@@ -35,7 +35,7 @@ export default function MagazineBook({ active }: { active: boolean }) {
     <div className="mb">
       <span className="wv__ghost mb__ghost">MAGAZINE</span>
 
-      <div className="mb__stage" data-open={opened} data-active={active}>
+      <div className="mb__stage" data-open={opened} data-active={active} data-end={atEnd}>
         <div ref={bookRef} className="mb__book">
           {/* 左半：翻过去的纸落在这一侧 */}
           <div className="mb__left" data-show={opened} />

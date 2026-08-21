@@ -41,7 +41,9 @@ export const DOOR4_DECALS: readonly DecalSpec[] = []
 /**
  * 第 2 扇门的内侧 —— 翻开后正对观众的那一面，贴纸最密的地方。
  *
- * `idcard` 就是 ABOUT 的入口，既是热点也可拖。
+ * ABOUT 的入口是工牌，它已经不在这张表里：贴花是零厚度的平面，工牌挂在
+ * 实体挂钩上、还要被钩尖穿过吊环，做成实体才成立。现在它是 PhysicalProps
+ * 的 IdCardModel，由 Props.tsx 按 ID_CARD_AT 装到门上。
  */
 export const DOOR2_INNER_DECALS: readonly DecalSpec[] = [
   // 门顶那两张文字贴纸，在参考里左右框住工牌、占满上半屏。
@@ -49,7 +51,6 @@ export const DOOR2_INNER_DECALS: readonly DecalSpec[] = [
   // 与参考逐像素吻合。倾角（−3°/+4°）已烘进贴图，不再给 rot。
   { id: 'stk-jad', url: '/assets/obj2/stk10.webp', left: 0.06, top: 0.1, width: 0.34, draggable: true },
   { id: 'stk-nowadays', url: '/assets/obj2/stk11.webp', left: 0.49, top: 0.09, width: 0.34, draggable: true },
-  { id: 'idcard', url: '/assets/obj/idcard2.webp', left: 0.26, top: 0.18, width: 0.38, draggable: true },
   { id: 'tapes', url: '/assets/obj/tapes.webp', left: 0.03, top: 0.46, width: 0.26, draggable: true },
   { id: 'stk-love', url: '/assets/obj2/stk6.webp', left: 0.04, top: 0.14, width: 0.21, rot: -4, draggable: true },
   { id: 'stk-wizard', url: '/assets/obj2/stk5.webp', left: 0.72, top: 0.18, width: 0.18, rot: 6, draggable: true },
@@ -74,28 +75,57 @@ export const DOOR2_INNER_DECALS: readonly DecalSpec[] = [
   { id: 'stk-flower-lower', url: '/assets/obj2/stk9.webp', left: 0.82, top: 0.79, width: 0.1, rot: -8, draggable: true },
 ]
 
-/**
- * 工牌吊环挂点在门内侧内容组里的局部坐标。
+/* ============================================================================
+ * 工牌与它的挂钩
  *
- * 参考里工牌是挂在一枚门贴挂钩上的，不是直接贴在门上。挂钩是实体
- * （PhysicalProps 的 IdCardHookModel），位置必须和 `idcard` 这张贴花的
- * 印刷吊环对齐，所以在这里由同一组百分比反算，换素材时一处改动：
+ * 这两个坐标不是贴花，但必须和这张贴花表里那套「门面百分比」反解出自同一处：
+ * 工牌原本就是按 left 26% / top 18% / width 38% 摆的一张贴花，挂钩是照着它的
+ * 印刷吊环对齐做出来的。工牌换成实体（PhysicalProps 的 IdCardModel）之后，
+ * 位置一个像素都不能动，否则钩尖就不再从吊环的孔里穿过去。两个数放在一起，
+ * 就不会有人只改一个。
  *
  *   贴片宽  w = 0.38 × DOOR_W(0.924)                = 0.35112
- *   贴片高  h = w ÷ 图集宽高比(0.565789)             = 0.62059
+ *   贴片高  h = w ÷ 源图宽高比 430/760(0.565789)     = 0.62059
  *   贴片中心 x = (0.26 + 0.38/2) × DOOR_W − DOOR_W/2 = −0.0462
  *          y = DOOR_H/2 − (0.18 × DOOR_H + h/2)     =  0.55307
- *   吊环孔在 430×760 原图里的透明区中心 (214.5, 65)：
- *          x = −0.0462 + (214.5/430 − 0.5) × w      = −0.04661
- *          y =  0.55307 + (0.5 − 65/760) × h        =  0.81028
- *   孔洞净空 0.061 × 0.070，勾体直径 0.012，穿得过去。
  *
- * 挂钩底板压在孔上沿之上，所以锚点给的是**底板中心**：
- * y = 孔心 0.810 + 0.087（模型里手臂到底板的距离），z 落在门内侧面上。
- */
+ * 吊环的孔在 430×760 源图里占 x 177–252 / y 25–108，换算到内容组：
+ *          x = −0.0462 + (214.5/430 − 0.5) × w      = −0.04661
+ *          y ∈ 0.55307 + (0.5 − {25,108}/760) × h   = 0.7752 … 0.8430
+ *   净空 0.062 × 0.069，钩体直径 0.012，穿得过去。
+ *
+ * 挂钩底板压在孔上沿之上，所以 ID_CARD_HOOK_AT 给的是**底板中心**：
+ * y = 手臂下端 0.810 + 0.087（模型里手臂到底板的距离），z 落在门内侧面上。
+ * 手臂下端 0.810、钩尖 0.810–0.835 都落在上面那段孔高里。
+ * ========================================================================== */
+
 export const ID_CARD_HOOK_AT: readonly [number, number, number] = [-0.0466, 0.897, -0.0045]
 
-/** 图集要打包的全部贴图（去重后） */
+/**
+ * 工牌整张（吊环 + 卡体）的世界宽高 —— 就是上面那两行 w / h。
+ *
+ * 两处在用，必须是同一份：拖拽的占地范围（Props.tsx），以及实体模型反推
+ * 「源图 1px 折算多少世界单位」的基准（PhysicalProps 的 IdCardModel）。
+ */
+export const ID_CARD_SIZE: readonly [number, number] = [0.35112, 0.62059]
+
+/**
+ * 工牌实体的装配点：整张牌（吊环 + 卡体）的中心，与原贴花中心重合。
+ *
+ * z 是卡背离门内侧面的距离。门内侧面在 −0.0045，挂钩底板厚 0.012 压在上面，
+ * 正面就到 0.0075 —— 牌子贴着承它重量的那块五金件，卡背取同一个 z。
+ * 由此卡体中面（IdCardModel 里吊环片所在的位置）落在 0.0075 + 0.014/2 = 0.0145：
+ * 挂钩手臂在 −0.0025 被环带挡住，钩尖在 0.0255 从孔里探到牌子前面 0.011。
+ */
+export const ID_CARD_AT: readonly [number, number, number] = [-0.0462, 0.55307, 0.0075]
+
+/**
+ * 图集要打包的全部贴图（去重后）。
+ *
+ * 工牌退出这张表之后，图集里 `/assets/obj/idcard2.webp` 那一格就成了「已备好、
+ * 场景层未排位」的多余项 —— pack-decals 对这个方向只警告不失败，重打图集时
+ * 它会被顺手挤掉，都不影响运行时。素材本身仍在用：IdCardModel 按 URL 单独加载它。
+ */
 export const DECAL_URLS: readonly string[] = [
   ...new Set(
     [...DOOR1_DECALS, ...DOOR4_DECALS, ...DOOR2_INNER_DECALS].map((d) => d.url),

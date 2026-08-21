@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber'
-import { Suspense, useEffect, useRef } from 'react'
-import { Group, NoToneMapping, Vector3 } from 'three'
+import { Suspense } from 'react'
+import { NoToneMapping } from 'three'
 import { useSceneCapabilities } from '../store'
 import CameraRig from './CameraRig'
 import { APPROACH_KEYS } from './cameraPath'
@@ -14,11 +14,6 @@ import {
   DOOR4_DECALS,
   ID_CARD_HOOK_AT,
 } from './decalSpecs'
-import {
-  activateHotspot,
-  registerHotspotAnchor,
-  setHotspotActive,
-} from './hotspotActions'
 import { CameraReturn, DoorHotspots, WorldHotspots } from './Hotspots'
 import { DOOR_H, DOOR_W } from './lockerSpec'
 import { IdCardHookModel } from './PhysicalProps'
@@ -34,40 +29,15 @@ import ZoomControls, { ZoomInput } from './ZoomControls'
 import './hero.css'
 
 /**
- * 首屏 3D 场景。
+ * 工牌、打字机和 ABOUT / CONTACT 两个热点共用同一个门内侧坐标系。
  *
- * 结构：Canvas + 相机 + 灯光 + 性能总管 + 柜体 + 柜内外物件 + 门上贴花 + 热点。
+ * 这里不再为工牌单独接线：它已经是一件实体（Props 的 ID_CARD），
+ * PhysicalItem 会替它登记随拖拽移动的热点锚点、并把点击与 hover 转给
+ * 同一条动作总线 —— 正是原先这个组件手工维护 ABOUT_LOCAL 在做的事。
  */
-/** 工牌这张贴花既是 ABOUT 的入口也可拖：点击（位移没过阈值）时走同一条动作总线 */
-function onDecalTap(id: string) {
-  if (id === 'idcard') activateHotspot('about')
-}
-
-function onDecalHover(id: string | null, on: boolean) {
-  if (id === 'idcard') setHotspotActive('about', on)
-}
-
-const ABOUT_LOCAL = [-0.0462, 0.553, -0.002] as const
-const _aboutWorld = new Vector3()
-
-/** 工牌、打字机和 ABOUT 热点共用同一个门内侧坐标系。 */
 function DoorTwoInnerContent({ interactive }: { interactive: boolean }) {
-  const carrier = useRef<Group>(null)
-  const aboutLocal = useRef<[number, number, number]>([...ABOUT_LOCAL])
-
-  useEffect(
-    () =>
-      registerHotspotAnchor('about', () => {
-        const group = carrier.current
-        if (!group) return [0, 0, 0]
-        group.localToWorld(_aboutWorld.set(...aboutLocal.current))
-        return [_aboutWorld.x, _aboutWorld.y, _aboutWorld.z]
-      }),
-    [],
-  )
-
   return (
-    <group ref={carrier} name="Door_02_InteractiveContent">
+    <group name="Door_02_InteractiveContent">
       {/* 工牌挂在这枚门贴挂钩上（参考如此）。钩子是门上的五金件，
           工牌被拖走后它留在原地，位置见 decalSpecs 的 ID_CARD_HOOK_AT */}
       <group name="Door_02_IdCardHook" position={[...ID_CARD_HOOK_AT]}>
@@ -80,13 +50,6 @@ function DoorTwoInnerContent({ interactive }: { interactive: boolean }) {
           width={DOOR_W}
           height={DOOR_H}
           interactive={interactive}
-          onTap={onDecalTap}
-          onHover={onDecalHover}
-          onPositionChange={(id, position) => {
-            if (id !== 'idcard') return
-            // 热点保持在贴花后面，不与贴花本体抢指针。
-            aboutLocal.current = [position[0], position[1], ABOUT_LOCAL[2]]
-          }}
         />
       </Suspense>
       <DoorTwoMountedProps />
@@ -95,6 +58,11 @@ function DoorTwoInnerContent({ interactive }: { interactive: boolean }) {
   )
 }
 
+/**
+ * 首屏 3D 场景。
+ *
+ * 结构：Canvas + 相机 + 灯光 + 性能总管 + 柜体 + 柜内外物件 + 门上贴花 + 热点。
+ */
 export default function HeroSceneCanvas() {
   const caps = useSceneCapabilities()
   const query = new URLSearchParams(location.search)
