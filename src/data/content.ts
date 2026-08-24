@@ -1,9 +1,11 @@
 /* 站点全部文案与作品数据 —— 与参考逐帧核对整理 */
 
 export const SITE = {
-  owner: 'AVA LI',
-  tagline: "AVA LI — PORTFOLIO '26",
+  owner: 'YUXIN CHEN',
+  tagline: "YUXIN CHEN — PORTFOLIO '26",
   year: '2026',
+  intro: '聚焦 AI Agent、AIGC 与商业化增长，做过从产品能力设计、效果评测到市场落地的完整闭环；也参与过全球市场 0-1 GTM，把本地需求转化为可规模化推广的产品方案。',
+  cta: '查看我如何让 AI 能力走进真实业务并产生增长',
 }
 
 /* ── 出处与源码 ───────────────────────────────────────
@@ -28,25 +30,25 @@ export const NAV = [
 
 /* ── ABOUT：工牌 ─────────────────────────────────────── */
 export const ABOUT = {
-  cardNo: 'NO. xxx',
-  title: ['BASIC', 'INFORMATION'],
+  cardNo: 'NO. YC-2026',
+  title: ['YUXIN', 'CHEN'],
   titleCn: '个人简介',
-  sub: 'PERSONAL PORTFOLIO ID CARD',
+  sub: 'AI PRODUCT · AGENT · COMMERCIALIZATION',
   fields: [
-    { k: 'NAME / 姓名', v: 'XXX' },
-    { k: 'GENDER / 性别', v: 'XXX' },
-    { k: 'AGE / 年龄', v: 'XXX' },
-    { k: 'CLASS / 班级', v: 'XXX' },
-    { k: 'EDUCATION / 学历', v: 'XXX' },
-    { k: 'MAJOR / 专业', v: 'XXX' },
+    { k: 'NAME / 姓名', v: '陈羽心 / Yuxin Chen' },
+    { k: 'LOCATION / 城市', v: '上海，中国' },
+    { k: 'STATUS / 状态', v: '求职中 / Open to opportunities' },
+    { k: 'FOCUS / 方向', v: 'AI Product · Agent · Commercialization' },
+    { k: 'EDUCATION / 教育', v: '南京大学 · 考古学硕士' },
+    { k: 'BACKGROUND / 背景', v: '华东理工大学 · 建筑学类学士' },
   ],
-  email: 'xxx',
-  phone: 'xxx',
-  stampTop: 'CERTIFIED',
-  stampMid: 'xxx',
-  stampRing: 'PERSONAL PORTFOLIO · xxx ·',
-  footL: 'IN MY CREATIVE ERA',
-  footR: 'PERSONAL DESIGN PORTFOLIO · 2026',
+  email: '1370149335@qq.com',
+  phone: '+86 150 6869 9079',
+  stampTop: 'OPEN TO',
+  stampMid: 'WORK',
+  stampRing: 'YUXIN CHEN · PRODUCT PORTFOLIO ·',
+  footL: 'BUILDING AI FOR REAL BUSINESS',
+  footR: 'PERSONAL PORTFOLIO · 2026',
 }
 
 /* ── SKILLS：三张卡片 ─────────────────────────────────── */
@@ -63,38 +65,38 @@ export type SkillCard = {
 export const SKILLS: SkillCard[] = [
   {
     no: '01',
-    kicker: '01 / VISUAL DESIGN',
-    title: '视觉设计',
-    desc: '以排版、色彩与图像建立可被记住的视觉秩序。',
+    kicker: '01 / AI PRODUCT & AGENT',
+    title: 'AI 产品与 Agent',
+    desc: '把模型能力拆成可用、可评测、可规模化迭代的产品体验。',
     rows: [
-      { k: 'GRAPHIC', v: 'Photoshop / Illustrator' },
-      { k: 'LAYOUT', v: 'InDesign / Figma' },
-      { k: 'MOTION', v: 'After Effects / C4D' },
+      { k: 'ARCHITECTURE', v: 'Agent Harness / Skill 编排' },
+      { k: 'QUALITY', v: 'Prompt 工程 / LLM 评测体系' },
+      { k: 'EXPERIENCE', v: '多模态 / TTS 产品测评' },
     ],
     bg: '#1b28d8',
     fg: '#ffffff',
   },
   {
     no: '02',
-    kicker: '02 / DATA & INSIGHT',
-    title: '数据分析',
-    desc: '整理、分析并解释数据，为叙事与决策建立清晰依据。',
+    kicker: '02 / STRATEGY & DATA',
+    title: '策略与数据',
+    desc: '用数据判断问题，以产品与策略把增长落到真实业务。',
     rows: [
-      { k: 'ANALYSIS', v: 'SPSS / SQL / Python' },
-      { k: 'WORKFLOW', v: 'Excel / VLOOKUP / 数据透视表' },
+      { k: 'ANALYSIS', v: 'SQL / A-B 实验 / 指标体系' },
+      { k: 'DECISION', v: '漏斗归因 / 数据看板 / 策略产出' },
     ],
     bg: '#c8f322',
     fg: '#12140f',
   },
   {
     no: '03',
-    kicker: '03 / GENERATIVE PRACTICE',
-    title: 'AI 工具',
-    desc: '把生成式工具融入研究、视觉试验与创意内容生产。',
+    kicker: '03 / GLOBAL COMMUNICATION',
+    title: '全球沟通',
+    desc: '理解本地需求，并将产品方案转化为可规模化推广的增长路径。',
     rows: [
-      { k: 'IMAGE', v: 'Recraft / 即梦 AI / Nano Banana' },
-      { k: '3D', v: '焦点 AI / 混元 AI / Tripo' },
-      { k: 'RESEARCH', v: 'Gemini / GPT' },
+      { k: 'ENGLISH', v: 'IELTS 6.5 / CET-6 595' },
+      { k: 'EXPERIENCE', v: 'TikTok 全英文办公 7 个月' },
+      { k: 'ABILITY', v: '英语可作为工作语言' },
     ],
     bg: '#ffffff',
     fg: '#14161a',
@@ -105,8 +107,8 @@ export const SKILLS: SkillCard[] = [
 export const FOLDERS = [
   {
     id: 'video',
-    en: ['VIDEO'],
-    cn: '影像作品',
+    en: ['AI', 'AGENT'],
+    cn: '小饿 AI',
     bg: '#0b0b0d',
     fg: '#e0322a',
     cnFg: '#e0322a',
@@ -117,8 +119,8 @@ export const FOLDERS = [
   },
   {
     id: 'design',
-    en: ['DESIGN'],
-    cn: '视觉类设计',
+    en: ['DESIGN', 'BOOK'],
+    cn: '个人设计作品集',
     bg: '#c8f322',
     fg: '#1b28d8',
     cnFg: '#1b28d8',
@@ -129,8 +131,8 @@ export const FOLDERS = [
   },
   {
     id: 'photograph',
-    en: ['PHOTO', 'GRAPH'],
-    cn: '摄影作品',
+    en: ['UGC', 'GROWTH'],
+    cn: '小红书商业化',
     bg: '#1b28d8',
     fg: '#c8f322',
     cnFg: '#ffffff',
@@ -141,8 +143,8 @@ export const FOLDERS = [
   },
   {
     id: 'website',
-    en: ['WEBSITE', '&', 'WRITING'],
-    cn: '文字作品',
+    en: ['GLOBAL', 'AIGC'],
+    cn: 'TikTok 与增长策略',
     bg: '#f8f8f6',
     fg: '#14161a',
     cnFg: '#14161a',
@@ -151,7 +153,83 @@ export const FOLDERS = [
     rot: 2,
     z: 2,
   },
+  {
+    id: 'strategy',
+    en: ['GROWTH', 'STRATEGY'],
+    cn: '抖音电商增长策略',
+    bg: '#f5c8ab',
+    fg: '#17242c',
+    cnFg: '#17242c',
+    x: 68,
+    y: 38,
+    rot: 6,
+    z: 4,
+  },
 ] as const
+
+export type CaseStudy = {
+  id: 'video' | 'photograph' | 'website' | 'strategy'
+  no: string
+  kicker: string
+  title: string
+  subtitle: string
+  summary: string
+  context: string
+  role: string
+  approach: string[]
+  outcomes: string[]
+}
+
+export const CASE_STUDIES: CaseStudy[] = [
+  {
+    id: 'video',
+    no: '01',
+    kicker: 'TAOBAO FLASH · AI PRODUCT',
+    title: '小饿 AI',
+    subtitle: '骑手端 AI 助手的 Agent 化升级与评测基建',
+    summary: '从关键词问答升级为具备意图理解、状态感知与工具调用能力的骑手 AI Agent。',
+    context: '面向日均服务 200w+ 骑手的物流场景，核心目标是降低骑手跑单 CPO（进线成本）。',
+    role: '负责场景方案设计、Agent 架构升级、异常报备 subagent 与评测基建。',
+    approach: ['定义 Agent 五层产品架构与主被动双触发策略', '围绕出餐慢、联系不上顾客、地址异常设计端到端对话方案', '建立 Trace 观测、离线回归、在线监控与版本准入闭环'],
+    outcomes: ['异常场景骑手 CPO 下降 5.6%', '日均 940 Case 自动评测', '人机一致率 89.79%，问答完全正确率 91.3%'],
+  },
+  {
+    id: 'photograph',
+    no: '02',
+    kicker: 'XIAOHONGSHU · COMMERCIALIZATION',
+    title: 'UGC 促产与广告闭环',
+    subtitle: '从 AIGC 共创到授权投流的品牌广告增长方案',
+    summary: '围绕供给、分发与资产放大，重构品牌 UGC 促产到投流的完整链路。',
+    context: '服务非标、信息流与开屏广告迭代，以 AIGC 创意供给、精准投放和样式创新提升广告收入。',
+    role: '负责 UGC 促产产品矩阵、流量激励重构、授权投流闭环与广告样式创新。',
+    approach: ['设计“B 端定制 AI 特效 - C 端生成 - 直连发布器”共创链路', '以相关性模型准入与多维评分重构流量激励', '打通“促产 - 授权 - 投流 - 分成”商业化闭环'],
+    outcomes: ['笔记发布转化率提升 17.2%', '激励准确率提升至 95%，预算消耗率 98.2%', '授权笔记广告消耗增长 158%，自然转广率提升至 8%'],
+  },
+  {
+    id: 'website',
+    no: '03',
+    kicker: 'TIKTOK · GLOBAL AIGC',
+    title: '广告创意 AIGC',
+    subtitle: '全球化评测、本地化需求与产品 GTM',
+    summary: '从创意能力评测到全球市场增长，让 AIGC 产品能力在本地需求中实现可规模化落地。',
+    context: '负责商业化广告创意 AIGC 的策略迭代与 GTM，提升创意能力的广告收入渗透与投放效果。',
+    role: '主导多维评测体系、沙特 TTS 本地化需求落地与全球市场用户增长分析。',
+    approach: ['设计脚本、视觉、音频三维评测框架', '结合市场收入、反馈与访谈定义本地化产品需求', '整合 30+ 渠道、10+ 国家市场数据及用户反馈，建立增长闭环'],
+    outcomes: ['覆盖全球 20 个语种、100+ TTS 音色测评', '标注一致率提升 150%，支撑策略效果优化 40%', '沙特广告客诉降低 60%，业务季环比增长 120%'],
+  },
+  {
+    id: 'strategy',
+    no: '04',
+    kicker: 'DOUYIN E-COMMERCE · GROWTH',
+    title: '电商增长策略',
+    subtitle: '服饰行业经营、营销专项与数据分析',
+    summary: '连接行业、产品与流量团队，把经营问题拆解为可验证的增长策略。',
+    context: '在抖音电商服饰行业参与经营、营销专项与数据分析，支持行业增长与优质供给引入。',
+    role: '主导高价率治理专项、热点营销联动与 618、双 11 等策略分析。',
+    approach: ['建立 Badcase 金字塔 SOP，按投产比推进大模型比价化', '联动猜你喜欢、搜索、推荐 Feed 三场域开展 AB 实验', '48 小时跑通短视频种草、直播转化、搜索承接与货架铺货'],
+    outcomes: ['月内高价率下降 17pp，自然流高价率下降 8pp', '热点营销话题热榜 Top 5', '行业 GMV 环比提升 46%'],
+  },
+]
 
 /* ── DESIGN › 01 POSTERS ─────────────────────────────── */
 export const POSTERS = [
@@ -169,7 +247,7 @@ export const POSTERS = [
 ]
 
 /* ── DESIGN › 02 MAGAZINE ────────────────────────────── */
-export const MAGAZINE_PAGES = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']
+export const MAGAZINE_PAGES = Array.from({ length: 19 }, (_, i) => `portfolio-${String(i + 1).padStart(2, '0')}`)
 
 /* ── DESIGN › 03 IP DESIGN ───────────────────────────── */
 export const IP_DESIGN = {
@@ -227,20 +305,20 @@ export const VIDEOS = [
 export const WEBSITES = [
   {
     no: '01',
-    slug: 'COFFEE / IN CHINA',
-    title: ['Coffee / In', 'China'],
-    kicker: 'DATA JOURNALISM · WEB',
-    desc: '中国咖啡市场在消费降级、价格竞争与情绪经济之间的增长逻辑。',
+    slug: 'TIKTOK / AIGC',
+    title: ['TikTok /', 'AIGC'],
+    kicker: 'GLOBAL PRODUCT · GTM',
+    desc: '广告创意 AIGC 的全球化评测、本地化产品需求与市场增长闭环。',
     cover: 'coffee',
     glow: '#f2d49a', // 咖啡封面的焦糖黄
     href: '#',
   },
   {
     no: '02',
-    slug: 'SHORT DRAMA / OVERSEAS',
-    title: ['Short Drama /', 'Overseas'],
-    kicker: 'FEATURE · WEB',
-    desc: '短剧出海：内容工业化生产与海外分发链路的一次拆解。',
+    slug: 'DOUYIN / GROWTH',
+    title: ['Douyin /', 'Growth'],
+    kicker: 'STRATEGY · OPERATIONS',
+    desc: '从高价率治理、营销活动到行业策略的增长实践。',
     cover: 'drama',
     glow: '#f0bfa4', // 短剧封面的暖橘
     href: '#',
@@ -261,7 +339,7 @@ export const WEBSITES = [
 export const NOTE_COLORS = ['#cfe0c3', '#f0e6a8', '#e8b7b7', '#a9c9dd', '#e5cfe0', '#d8cdb8']
 
 export const SEED_NOTES = [
-  { id: 's1', text: '', color: '#cfe0c3', x: 14, y: 42, rot: -2 },
-  { id: 's2', text: '', color: '#f0e6a8', x: 70, y: 12, rot: 3 },
-  { id: 's3', text: '', color: '#e8b7b7', x: 80, y: 33, rot: -3 },
+  { id: 's1', text: 'EMAIL\n1370149335@qq.com', color: '#cfe0c3', x: 14, y: 42, rot: -2 },
+  { id: 's2', text: 'GITHUB\ngithub.com/yuxinchen0619', color: '#f0e6a8', x: 70, y: 12, rot: 3 },
+  { id: 's3', text: 'WECHAT\ncyx1370149335\nPHONE 15068699079', color: '#e8b7b7', x: 80, y: 33, rot: -3 },
 ]

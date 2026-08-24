@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import Credit from './components/Credit'
+import Intro from './components/Intro'
 import Loader from './components/Loader'
 import Reveal from './components/Reveal'
 import Nav from './components/Nav'
@@ -67,6 +68,7 @@ export default function App() {
           onSelect={(id) => openOverlay(id)}
         />
         <Credit />
+        <Intro />
         <OverlayHost />
       </div>
     )
@@ -84,6 +86,7 @@ export default function App() {
       {phase === 'scene' && <Nav />}
       {/* 复刻出处与开源地址：和导航同期出现，浮层打开时被盖住 */}
       {phase === 'scene' && <Credit />}
+      {phase === 'scene' && <Intro />}
 
       {/* 四个浮层的统一宿主：dialog 语义、背景 inert、focus trap、
           退出动画播完才卸载、焦点归还，全部在 OverlayHost 内部完成 */}

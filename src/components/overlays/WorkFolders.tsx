@@ -6,9 +6,7 @@ import './overlay.css'
 import './folders.css'
 
 const DesignView = lazy(() => import('../work/DesignView'))
-const PhotographWall = lazy(() => import('../work/PhotographWall'))
-const VideoList = lazy(() => import('../work/VideoList'))
-const WebsiteCarousel = lazy(() => import('../work/WebsiteCarousel'))
+const ProductCaseStudy = lazy(() => import('../work/ProductCaseStudy'))
 
 /* 视频里四个文件夹的版位（相对 1320×724 底稿换算成百分比） */
 const POS: Record<string, { l: number; t: number; w: number; h: number; rot: number }> = {
@@ -16,6 +14,7 @@ const POS: Record<string, { l: number; t: number; w: number; h: number; rot: num
   design: { l: 33.0, t: 27.6, w: 29.2, h: 44.2, rot: -7 },
   photograph: { l: 55.3, t: 9.7, w: 23.1, h: 35.9, rot: 3 },
   website: { l: 56.8, t: 63.5, w: 22.3, h: 31.8, rot: 2 },
+  strategy: { l: 73, t: 39, w: 20.2, h: 30.4, rot: 6 },
 }
 
 export default function WorkFolders() {
@@ -26,9 +25,7 @@ export default function WorkFolders() {
     return (
       <Suspense fallback={<div className="wv wv--loading" />}>
         {workView === 'design' && <DesignView />}
-        {workView === 'photograph' && <PhotographWall />}
-        {workView === 'video' && <VideoList />}
-        {workView === 'website' && <WebsiteCarousel />}
+        {workView !== 'design' && <ProductCaseStudy id={workView} />}
       </Suspense>
     )
   }

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { MAGAZINE_PAGES } from '../../data/content'
-import { releaseImages, SIZES, workImage } from './imageSources'
 
 /** 当前跨页前后各保留几张纸的高分辨率解码结果 */
 const KEEP = 1
@@ -25,15 +24,11 @@ export default function MagazineBook({ active }: { active: boolean }) {
 
   const turn = (d: number) => setFlipped((f) => Math.max(0, Math.min(total, f + d)))
 
-  // 关闭 DESIGN 栏目时断开所有内页引用
-  useEffect(() => {
-    const book = bookRef.current
-    return () => releaseImages(book)
-  }, [])
+  useEffect(() => undefined, [])
 
   return (
     <div className="mb">
-      <span className="wv__ghost mb__ghost">MAGAZINE</span>
+      <span className="wv__ghost mb__ghost">DESIGN BOOK</span>
 
       <div className="mb__stage" data-open={opened} data-active={active} data-end={atEnd}>
         <div ref={bookRef} className="mb__book">
@@ -58,8 +53,7 @@ export default function MagazineBook({ active }: { active: boolean }) {
                 >
                   {near && s.front && (
                     <img
-                      {...workImage('mag', s.front)}
-                      sizes={SIZES.mag}
+                      src={`/assets/portfolio/${s.front}.png`}
                       alt=""
                       decoding="async"
                       draggable={false}
@@ -74,8 +68,7 @@ export default function MagazineBook({ active }: { active: boolean }) {
                 >
                   {near && s.back && (
                     <img
-                      {...workImage('mag', s.back)}
-                      sizes={SIZES.mag}
+                      src={`/assets/portfolio/${s.back}.png`}
                       alt=""
                       decoding="async"
                       draggable={false}

@@ -1,0 +1,15 @@
+.intro {
+  position: fixed;
+  left: 28px;
+  bottom: 108px;
+  z-index: 16;
+  width: min(330px, calc(100vw - 56px));
+  color: #1b2a37;
+  animation: introIn .7s var(--ease-out) both .28s;
+}
+.intro p { margin: 0; font-size: 12px; line-height: 1.75; letter-spacing: .025em; }
+.intro button { margin-top: 12px; padding: 0 0 5px; border-bottom: 1px solid rgba(27,42,55,.48); color: inherit; font-size: 11px; letter-spacing: .08em; text-align: left; }
+.intro button span { display: inline-block; margin-left: 4px; transition: transform .25s var(--ease-out); }
+.intro button:hover span { transform: translateX(4px); }
+@keyframes introIn { from { opacity: 0; transform: translateY(12px); } }
+@media (max-width: 680px) { .intro { bottom: 88px; width: min(285px, calc(100vw - 42px)); left: 21px; } .intro p { font-size: 11px; } }

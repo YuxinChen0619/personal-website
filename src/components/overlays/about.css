@@ -127,7 +127,26 @@
 .idc__avatar {
   width: 100%;
   max-width: 158px;
-  height: auto;
+  aspect-ratio: 4 / 5;
+  border: 1px dashed rgba(30, 34, 40, 0.42);
+  color: #607b91;
+  display: grid;
+  place-content: center;
+  gap: 8%;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(176, 206, 224, .35), rgba(255, 255, 255, .72));
+}
+
+.idc__avatar span {
+  font-family: var(--font-poster);
+  font-size: clamp(21px, 4.2cqw, 42px);
+  line-height: .8;
+}
+
+.idc__avatar small {
+  font-size: clamp(4px, .75cqw, 7px);
+  line-height: 1.45;
+  letter-spacing: .1em;
 }
 
 .idc__main {
