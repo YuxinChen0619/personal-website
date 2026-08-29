@@ -10,8 +10,16 @@ lerna-debug.log*
 node_modules
 dist
 .wrangler
+.vercel
 dist-ssr
 *.local
+
+# Local configuration and secrets (keep examples such as .env.example trackable)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 
 # Editor directories and files
 .vscode/*
