@@ -8,18 +8,6 @@ export const SITE = {
   cta: '查看我如何让 AI 能力走进真实业务并产生增长',
 }
 
-/* ── 出处与源码 ───────────────────────────────────────
- * 本站是对小红书博主 momo 的 Locker 个人网站的复刻练习：视觉创意归原作者，
- * 这条出处要一直挂在页面上（左下角 Credit 组件），不是只写在 README 里。
- * repoUrl 是开源仓库地址，换仓库时只改这一处。 */
-export const CREDIT = {
-  author: 'momo',
-  platform: '小红书',
-  originUrl:
-    'https://www.xiaohongshu.com/discovery/item/6a852ae7000000002500b24e?xsec_token=ABxWdb99F51QhPGOvNNuLGxYSbTeGIKFnMDujjIeP1Kr8=',
-  repoUrl: 'https://github.com/qzz0518/locker-folio',
-}
-
 /* ── 顶部导航 ─────────────────────────────────────────── */
 export const NAV = [
   { id: 'about', label: 'ABOUT' },
