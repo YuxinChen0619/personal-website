@@ -6,23 +6,19 @@ import { startFrames, stopFrames, type FrameFn } from './frameLoop'
 import { releaseImages, SIZES, workImage } from './imageSources'
 import './photo.css'
 
-const COLS = 4
-const ROWS = 4
-/**
- * 槽位外框（也是所有 SHAPES 的上限）。
- * 448 × cos12° ≈ 438 落到屏幕上，占 1440 画幅的 30.4%，正好在参考图的 25–33% 区间里；
- * 原来的 300 在任何常见宽度下都低于这个区间，所以整面墙看着像一堆均匀的小缩略图。
- */
-const CELL_W = 448
-const CELL_H = 368
-/** 槽位间距。SHAPES 里没有任何一档超过 CELL_W × CELL_H，所以 64 就是两格之间可能出现的最小间隙 */
+const COLS = 5
+const ROWS = 6
+/** 所有照片统一使用 3:2 横幅，避免不规则画框造成视觉杂乱。 */
+const CELL_W = 424
+const CELL_H = 283
+/** 槽位间距 */
 const GAP = 64
-const SX = CELL_W + GAP // 512
-const SY = CELL_H + GAP // 432
+const SX = CELL_W + GAP
+const SY = CELL_H + GAP
 const TW = COLS * SX
 const TH = ROWS * SY
-/** 每列的错落偏移，让网格不像表格：仍是行距 SY 的 [0, .39, .14, .54]，只是换算到新的 SY 432 */
-const COL_SHIFT = [0, 168, 60, 232]
+/** 每列轻微错落，让整面墙保留自然的浏览节奏。 */
+const COL_SHIFT = [0, 168, 60, 232, 100]
 /**
  * 必须严格等于 max(COL_SHIFT)，这不是可调参数。
  * 取小了，偏移最多那一列的顶行会在还没滑出屏幕时就被窗口裁掉，向上拖的时候能看见格子凭空冒出来。
@@ -39,18 +35,8 @@ const MARGIN_Y = CELL_H * 0.8
  */
 const REF_W = 1320
 /**
- * 16 个槽位各自的外框，专门打破「每格一样大、一样比例」的均质感。
- * 索引用的是照片墙自己的槽位号（和取图同一个），而不是 gx/gy 的散列 ——
- * 散列会让同一张照片在无限平铺里换个位置就换个尺寸，接缝立刻穿帮。
- * 每一档都 ≤ 448×368，所以最小间隙仍是 GAP 64，任何两格都不会叠。
- * 格子靠 translate3d(-50%, -50%, 0) 居中在槽位里，尺寸变化直接变成间隙变化，这就是节奏感的来源。
+ * 所有槽位尺寸一致，图片的原始比例由 object-fit: cover 统一裁切到 3:2。
  */
-const SHAPES: [number, number][] = [
-  [448, 300], [332, 368], [424, 280], [376, 344],
-  [376, 344], [448, 280], [332, 368], [424, 300],
-  [424, 368], [376, 280], [448, 300], [332, 344],
-  [332, 300], [424, 344], [376, 368], [448, 280],
-]
 /** 惯性停止阈值（像素/帧） */
 const STOP_V = 0.12
 
@@ -83,13 +69,12 @@ function buildCells(w: Win): Cell[] {
       const c = mod(gx, COLS)
       const r = mod(gy, ROWS)
       const slot = (r * COLS + c) % PHOTOS.length
-      const [sw, sh] = SHAPES[slot % SHAPES.length]
       out.push({
         key: `${gx}_${gy}`,
         x: gx * SX * w.k,
         y: (gy * SY + COL_SHIFT[c]) * w.k,
-        w: sw * w.k,
-        h: sh * w.k,
+        w: CELL_W * w.k,
+        h: CELL_H * w.k,
         src: PHOTOS[slot],
       })
     }

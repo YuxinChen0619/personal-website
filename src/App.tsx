@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect } from 'react'
-import Intro from './components/Intro'
 import Loader from './components/Loader'
 import Reveal from './components/Reveal'
 import Nav from './components/Nav'
@@ -66,7 +65,6 @@ export default function App() {
           activeId={overlay}
           onSelect={(id) => openOverlay(id)}
         />
-        <Intro />
         <OverlayHost />
       </div>
     )
@@ -82,8 +80,6 @@ export default function App() {
         </Suspense>
       )}
       {phase === 'scene' && <Nav />}
-      {phase === 'scene' && <Intro />}
-
       {/* 四个浮层的统一宿主：dialog 语义、背景 inert、focus trap、
           退出动画播完才卸载、焦点归还，全部在 OverlayHost 内部完成 */}
       <OverlayHost />

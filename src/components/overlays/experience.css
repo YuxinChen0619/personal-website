@@ -1,0 +1,124 @@
+.panda-exp {
+  overflow: hidden;
+  background: #e7eef6;
+}
+
+.panda-exp__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  touch-action: none;
+}
+
+.panda-exp .ov__close { z-index: 3; }
+
+.panda-exp__hint {
+  position: absolute;
+  z-index: 2;
+  right: clamp(20px, 3vw, 48px);
+  bottom: clamp(20px, 3vw, 38px);
+  margin: 0;
+  color: rgba(25, 34, 49, 0.72);
+  font: 600 10px/1.2 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.15em;
+  pointer-events: none;
+}
+
+.panda-exp__copy {
+  position: absolute;
+  z-index: 2;
+  left: clamp(20px, 5vw, 78px);
+  bottom: clamp(60px, 10vh, 112px);
+  width: min(430px, calc(100vw - 40px));
+  color: #172333;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 360ms ease, transform 460ms cubic-bezier(.2,.8,.2,1);
+}
+
+.panda-exp__copy.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.panda-exp__copy article {
+  padding: clamp(16px, 2vw, 24px);
+  border: 1px solid rgba(23, 35, 51, 0.16);
+  border-radius: 3px;
+  background: rgba(252, 250, 244, 0.83);
+  box-shadow: 0 14px 35px rgba(28, 39, 54, 0.16);
+  backdrop-filter: blur(8px);
+  animation: pandaExperienceCopyIn 460ms cubic-bezier(.2,.8,.2,1);
+  font-family: var(--font-hand);
+}
+
+.panda-exp__meta,
+.panda-exp__company,
+.panda-exp__role,
+.panda-exp__summary { margin: 0; }
+
+.panda-exp__meta {
+  color: #5d6978;
+  font: 400 clamp(8px, calc(1.25vw - 7px), 11px)/1.2 var(--font-hand);
+  letter-spacing: .05em;
+}
+
+.panda-exp__company {
+  margin-top: 9px;
+  font: 700 clamp(14px, calc(1.8vw - 7px), 20px)/1.25 var(--font-hand);
+}
+
+.panda-exp__copy h3 {
+  max-width: none;
+  margin: 12px 0 10px;
+  font: 700 clamp(20px, calc(2.7vw - 7px), 27px)/1.12 var(--font-hand);
+  letter-spacing: .015em;
+  white-space: nowrap;
+}
+
+.panda-exp__copy h3.panda-exp__title--long {
+  max-width: 22ch;
+  white-space: normal;
+}
+
+.panda-exp__role {
+  color: #526779;
+  font: 700 clamp(12px, calc(1.55vw - 7px), 17px)/1.25 var(--font-hand);
+}
+
+.panda-exp__summary {
+  margin-top: 10px;
+  font: 400 clamp(11px, calc(1.35vw - 7px), 14px)/1.5 var(--font-hand);
+}
+
+.panda-exp__projects {
+  margin-top: 17px;
+  padding: 0;
+  border: 0;
+  color: #172333;
+  background: transparent;
+  font: 700 clamp(11px, calc(1.4vw - 7px), 15px)/1.2 var(--font-hand);
+  letter-spacing: .04em;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.panda-exp__projects:hover { color: #216b8b; }
+
+@keyframes pandaExperienceCopyIn {
+  from { opacity: 0; transform: translateY(14px); }
+}
+
+@media (max-width: 680px) {
+  .panda-exp__copy { bottom: 58px; }
+  .panda-exp__copy article { padding: 15px; }
+  .panda-exp__copy h3 { max-width: none; font-size: clamp(17px, calc(7vw - 7px), 22px); }
+  .panda-exp__copy h3.panda-exp__title--long { max-width: 22ch; }
+  .panda-exp__summary { font-size: clamp(10px, calc(5vw - 7px), 13px); line-height: 1.5; }
+  .panda-exp__hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-exp__copy, .panda-exp__copy article { animation: none; transition: none; }
+}

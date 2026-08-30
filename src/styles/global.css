@@ -20,6 +20,7 @@
   --font-slab: 'Alfa Slab One', serif;
   --font-black: 'Archivo Black', 'Helvetica Neue', sans-serif;
   --font-mono: 'Courier Prime', 'Courier New', monospace;
+  --font-hand: 'JF Dot Milk', monospace;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
@@ -31,6 +32,22 @@
 
   /* 最小触控目标（§11.2 / §16.4） */
   --tap-min: 44px;
+}
+
+@font-face {
+  font-family: 'JF Dot Milk';
+  src: url('/fonts/JF-Dot-milkjf16.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JF Dot Milk';
+  src: url('/fonts/JF-Dot-milkjf16B.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
 }
 
 *,

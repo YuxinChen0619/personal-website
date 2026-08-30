@@ -173,10 +173,9 @@
   position: relative;
   z-index: 2;
   perspective: 2200px;
-  /* 目标：合上时封面高度约占视口高的一半。书本 aspect-ratio 1.4，
-     合上只露右半页，封面高 H = W / 1.4 ⇒ W = 1.4 × 0.5vh = 0.70vh。
-     48vw 兜住又高又窄的视口（否则横向溢出），660px 封顶大屏。 */
-  width: min(70vh, 48vw, 660px);
+  /* 单页固定为 842 × 595 的横版比例；双页展开的书本宽高比为 1684 : 595。
+     合上时只露右半页，因此提高舞台宽度上限以维持封面约半屏高的阅读尺度。 */
+  width: min(132vh, 86vw, 1320px);
   max-width: 92vw;
   transition: transform 0.8s var(--ease-out);
   transform: translateX(-25%);
@@ -196,7 +195,7 @@
 .mb__book {
   position: relative;
   width: 100%;
-  aspect-ratio: 1.4; /* 两页并排 = 单页 0.7 × 2 */
+  aspect-ratio: 1684 / 595; /* 两页并排 = 842 / 595 × 2 */
   transform-style: preserve-3d;
 }
 
@@ -225,23 +224,30 @@
   box-shadow: 1px 1px 0 rgba(120, 105, 84, 0.25);
 }
 
-/* 落地阴影：bottom: -5% 让模糊椭圆整体落到封面下沿之外
-   （-2.4% 时 6px 模糊会糊到封面底部约 9px 上）。
-   宽 52% 起点 left: 50%，再按自身宽度左移 2%（≈书宽 1%），
-   阴影就正对着右半页的封面，而不是左半边的空盒子。 */
+/* 用整本书共享的一层柔和落地阴影，避免每张纸各自的阴影叠成生硬方框。 */
 .mb__book::after {
-  left: 50%;
-  bottom: -5%;
-  width: 52%;
-  height: 4.2%;
-  transform: translateX(-2%);
+  left: 5%;
+  bottom: -13%;
+  width: 90%;
+  height: 34%;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(46, 40, 32, 0.5), rgba(46, 40, 32, 0) 76%);
-  filter: blur(6px);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(46, 40, 32, 0.36) 0%,
+    rgba(46, 40, 32, 0.2) 30%,
+    rgba(46, 40, 32, 0.075) 57%,
+    transparent 86%
+  );
+  filter: blur(22px);
+  opacity: 0.9;
 }
 
-.mb__stage[data-open='true'] .mb__book::before,
-.mb__stage[data-open='true'] .mb__book::after {
+.mb__stage[data-open='false'] .mb__book::after {
+  left: 49%;
+  width: 54%;
+}
+
+.mb__stage[data-open='true'] .mb__book::before {
   opacity: 0;
 }
 
@@ -255,7 +261,7 @@
   border-radius: 3px 0 0 3px;
   box-shadow:
     inset -14px 0 22px -14px rgba(60, 50, 40, 0.32),
-    0 14px 34px rgba(60, 62, 74, 0.14);
+    inset 0 0 0 1px rgba(70, 58, 44, 0.035);
   opacity: 0;
   transition: opacity 0.3s var(--ease-out);
 }
@@ -305,7 +311,7 @@
   background: #efece6;
   border-radius: 0 3px 3px 0;
   overflow: hidden;
-  box-shadow: 0 14px 34px rgba(60, 62, 74, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(70, 58, 44, 0.035);
   padding: 0;
   transition: visibility 0s linear 0.4s;
 }
@@ -522,8 +528,7 @@
     padding-top: 14vh;
   }
   .mb__stage {
-    /* 62vh 兜住 820×400 这类横放的窄高度：单纯 86vw 会把书撑出视口。
-       封面高 = 62vh / 1.4 ≈ 44vh，横屏时仍留得下提示行。 */
-    width: min(86vw, 62vh);
+    /* 手机端优先不横向溢出；横版页面仍按 842 × 595 比例缩放。 */
+    width: min(92vw, 125vh);
   }
 }

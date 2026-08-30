@@ -171,6 +171,17 @@
   transform: translateX(-4px);
 }
 
+.wv__back--experience {
+  right: 26px;
+  left: auto;
+}
+
+.wv__back--experience::after {
+  right: 0;
+  left: -8px;
+  transform-origin: right;
+}
+
 .wv__index {
   position: fixed;
   top: 22px;

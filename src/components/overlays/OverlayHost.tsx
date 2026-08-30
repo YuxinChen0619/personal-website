@@ -4,16 +4,17 @@ import { useStore, type Overlay } from '../../store'
 import { captureOpener, resolveRestoreTarget } from './overlayFocus'
 import { useDialog } from './useDialog'
 import { OVERLAY_EXIT_MS, useOnOverlayUnmounted, useOverlayLifecycle } from './useOverlayLifecycle'
+import { sweepBackToExperience } from '../work/workTransition'
 import './overlay.css'
 
 const AboutCard = lazy(() => import('./AboutCard'))
-const SkillsDeck = lazy(() => import('./SkillsDeck'))
+const ExperienceJourney = lazy(() => import('./ExperienceJourney'))
 const WorkFolders = lazy(() => import('./WorkFolders'))
 const ContactBoard = lazy(() => import('./ContactBoard'))
 
 const BODIES = {
   about: AboutCard,
-  skills: SkillsDeck,
+  skills: ExperienceJourney,
   work: WorkFolders,
   contact: ContactBoard,
 } as const
@@ -21,7 +22,7 @@ const BODIES = {
 /** 屏幕阅读器读到的浮层标题，供 aria-labelledby 引用 */
 const TITLES = {
   about: 'ABOUT 个人信息工牌',
-  skills: 'SKILLS 技能卡',
+  skills: 'EXPERIENCE 实习经历',
   work: 'SELECTED WORK 作品文件夹',
   contact: 'CONTACT 软木板留言',
 } as const
@@ -35,7 +36,7 @@ const TITLE_ID = 'overlay-title'
  * 区域落在它身上而不是 .ov 上；SKILLS 的 .sk 同理，卡片四周的空档属于它。
  * 这些包裹层本身没有任何可视内容，点上去用户的意思就是「点空白」。
  */
-const SCRIM_CLASSES = ['ov', 'idc', 'sk']
+const SCRIM_CLASSES = ['ov', 'idc', 'exp']
 
 function isScrim(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && SCRIM_CLASSES.some((c) => target.classList.contains(c))
@@ -116,10 +117,11 @@ export default function OverlayHost() {
     st.closeOverlay()
   }, [])
 
-  // Escape：作品子页面先退回文件夹，再按一次才关闭整个浮层
+  // Escape：作品详情按进入来源返回 Experience 或文件夹，再按一次才关闭浮层。
   const onEscape = useCallback(() => {
     const st = useStore.getState()
-    if (st.workView) st.setWorkView(null)
+    if (st.workView && st.workOrigin === 'experience') sweepBackToExperience(st.returnFromWork)
+    else if (st.workView) st.returnFromWork()
     else st.closeOverlay()
   }, [])
 

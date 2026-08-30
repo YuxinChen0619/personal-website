@@ -4,14 +4,12 @@ export const SITE = {
   owner: 'YUXIN CHEN',
   tagline: "YUXIN CHEN — PORTFOLIO '26",
   year: '2026',
-  intro: '聚焦 AI Agent、AIGC 与商业化增长，做过从产品能力设计、效果评测到市场落地的完整闭环；也参与过全球市场 0-1 GTM，把本地需求转化为可规模化推广的产品方案。',
-  cta: '查看我如何让 AI 能力走进真实业务并产生增长',
 }
 
 /* ── 顶部导航 ─────────────────────────────────────────── */
 export const NAV = [
   { id: 'about', label: 'ABOUT' },
-  { id: 'skills', label: 'SKILLS' },
+  { id: 'skills', label: 'EXPERIENCE' },
   { id: 'work', label: 'SELECTED WORK' },
   { id: 'contact', label: 'CONTACT' },
 ] as const
@@ -26,9 +24,9 @@ export const ABOUT = {
     { k: 'NAME / 姓名', v: '陈羽心 / Yuxin Chen' },
     { k: 'LOCATION / 城市', v: '上海，中国' },
     { k: 'STATUS / 状态', v: '求职中 / Open to opportunities' },
-    { k: 'FOCUS / 方向', v: 'AI Product · Agent · Commercialization' },
+    { k: 'FOCUS / 方向', v: 'AI Product · AI Agent · AIGC' },
     { k: 'EDUCATION / 教育', v: '南京大学 · 考古学硕士' },
-    { k: 'BACKGROUND / 背景', v: '华东理工大学 · 建筑学类学士' },
+    { k: 'BACKGROUND / 背景', v: '阿里巴巴/字节跳动/小红书AI产品经历，练习时长两年半' },
   ],
   email: '1370149335@qq.com',
   phone: '+86 150 6869 9079',
@@ -38,58 +36,6 @@ export const ABOUT = {
   footL: 'BUILDING AI FOR REAL BUSINESS',
   footR: 'PERSONAL PORTFOLIO · 2026',
 }
-
-/* ── SKILLS：三张卡片 ─────────────────────────────────── */
-export type SkillCard = {
-  no: string
-  kicker: string
-  title: string
-  desc: string
-  rows: { k: string; v: string }[]
-  bg: string
-  fg: string
-}
-
-export const SKILLS: SkillCard[] = [
-  {
-    no: '01',
-    kicker: '01 / AI PRODUCT & AGENT',
-    title: 'AI 产品与 Agent',
-    desc: '把模型能力拆成可用、可评测、可规模化迭代的产品体验。',
-    rows: [
-      { k: 'ARCHITECTURE', v: 'Agent Harness / Skill 编排' },
-      { k: 'QUALITY', v: 'Prompt 工程 / LLM 评测体系' },
-      { k: 'EXPERIENCE', v: '多模态 / TTS 产品测评' },
-    ],
-    bg: '#1b28d8',
-    fg: '#ffffff',
-  },
-  {
-    no: '02',
-    kicker: '02 / STRATEGY & DATA',
-    title: '策略与数据',
-    desc: '用数据判断问题，以产品与策略把增长落到真实业务。',
-    rows: [
-      { k: 'ANALYSIS', v: 'SQL / A-B 实验 / 指标体系' },
-      { k: 'DECISION', v: '漏斗归因 / 数据看板 / 策略产出' },
-    ],
-    bg: '#c8f322',
-    fg: '#12140f',
-  },
-  {
-    no: '03',
-    kicker: '03 / GLOBAL COMMUNICATION',
-    title: '全球沟通',
-    desc: '理解本地需求，并将产品方案转化为可规模化推广的增长路径。',
-    rows: [
-      { k: 'ENGLISH', v: 'IELTS 6.5 / CET-6 595' },
-      { k: 'EXPERIENCE', v: 'TikTok 全英文办公 7 个月' },
-      { k: 'ABILITY', v: '英语可作为工作语言' },
-    ],
-    bg: '#ffffff',
-    fg: '#14161a',
-  },
-]
 
 /* ── SELECTED WORK：四个文件夹 ───────────────────────── */
 export const FOLDERS = [
@@ -235,7 +181,15 @@ export const POSTERS = [
 ]
 
 /* ── DESIGN › 02 MAGAZINE ────────────────────────────── */
-export const MAGAZINE_PAGES = Array.from({ length: 19 }, (_, i) => `portfolio-${String(i + 1).padStart(2, '0')}`)
+/* 封面 / 封底是单页；中间素材原本按左右跨页导出，拆成单张横版页后按阅读顺序排入。 */
+export const MAGAZINE_PAGES = [
+  'portfolio-01',
+  ...Array.from({ length: 17 }, (_, i) => {
+    const no = String(i + 2).padStart(2, '0')
+    return [`portfolio-${no}-left`, `portfolio-${no}-right`]
+  }).flat(),
+  'portfolio-19',
+]
 
 /* ── DESIGN › 03 IP DESIGN ───────────────────────────── */
 export const IP_DESIGN = {
@@ -258,10 +212,12 @@ export const IP_DESIGN = {
 
 /* ── PHOTOGRAPH ──────────────────────────────────────── */
 export const PHOTOS = [
-  'p1', 'p4', 'p2', 'p6',
-  'p5', 'p3', 'p6', 'p1',
-  'p2', 'p5', 'p4', 'p3',
-  'p6', 'p1', 'p3', 'p5',
+  'p01', 'p02', 'p03', 'p04', 'p05',
+  'p06', 'p07', 'p08', 'p09', 'p10',
+  'p11', 'p12', 'p13', 'p14', 'p15',
+  'p16', 'p17', 'p18', 'p19', 'p20',
+  'p21', 'p22', 'p23', 'p24', 'p25',
+  'p26', 'p27', 'p28', 'p29', 'p30',
 ]
 
 /* ── VIDEO ───────────────────────────────────────────── */

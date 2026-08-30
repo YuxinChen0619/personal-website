@@ -20,6 +20,23 @@ const OUT_MS = 640
 const EASE_IN = 'cubic-bezier(0.52, 0, 0.3, 1)'
 
 let running = false
+let pendingExperienceReveal: (() => void) | null = null
+
+/** Experience 的 Canvas 已按快照完成首帧渲染后，揭开返回遮罩。 */
+export function completeExperienceReturn() {
+  const reveal = pendingExperienceReveal
+  pendingExperienceReveal = null
+  reveal?.()
+}
+
+export function sweepBackToFolders(onCover: () => void) {
+  sweepBack(onCover, false)
+}
+
+/** Experience 来源的详情页返回：遮罩会等场景完成恢复后才揭开。 */
+export function sweepBackToExperience(onCover: () => void) {
+  sweepBack(onCover, true)
+}
 
 /**
  * 遮罩原点。
@@ -48,7 +65,7 @@ function prefersReduced() {
  * 播放返回过渡。`onCover` 会在遮罩盖满时被调用一次，用来真正切换视图。
  * 过渡期间重复调用只会直接切换，不会叠加第二层遮罩。
  */
-export function sweepBackToFolders(onCover: () => void) {
+function sweepBack(onCover: () => void, waitForExperience: boolean) {
   if (running || typeof document === 'undefined') {
     onCover()
     return
@@ -65,10 +82,17 @@ export function sweepBackToFolders(onCover: () => void) {
     host.style.background = '#efe1c2'
     document.body.appendChild(host)
     onCover()
-    window.setTimeout(() => {
+    const release = () => {
+      if (pendingExperienceReveal === release) pendingExperienceReveal = null
       host.remove()
       running = false
-    }, 140)
+    }
+    if (waitForExperience) {
+      pendingExperienceReveal = release
+      window.setTimeout(release, 2200)
+    } else {
+      window.setTimeout(release, 140)
+    }
     return
   }
 
@@ -104,7 +128,19 @@ export function sweepBackToFolders(onCover: () => void) {
   )
 
   let swapped = false
+  let released = false
   let elapsed = 0
+
+  const release = () => {
+    if (released) return
+    released = true
+    if (pendingExperienceReveal === release) pendingExperienceReveal = null
+    host.classList.add('wt--out')
+    host.style.setProperty('--wt-ox', `${origin.x}px`)
+    host.style.setProperty('--wt-oy', `${origin.y}px`)
+    host.style.setProperty('--wt-r', '0px')
+    elapsed = 0
+  }
 
   // 一个帧回调走完“等待盖满 → 切视图 → 波纹散开”，中途不另起循环
   const step = (dt: number) => {
@@ -113,13 +149,11 @@ export function sweepBackToFolders(onCover: () => void) {
       if (elapsed < SWAP_AT) return true
       swapped = true
       onCover()
-      host.classList.add('wt--out')
-      host.style.setProperty('--wt-ox', `${origin.x}px`)
-      host.style.setProperty('--wt-oy', `${origin.y}px`)
-      host.style.setProperty('--wt-r', '0px')
-      elapsed = 0
+      if (waitForExperience) pendingExperienceReveal = release
+      else release()
       return true
     }
+    if (!released) return true
     const t = Math.min(1, elapsed / OUT_MS)
     // easeOutCubic：波纹一开始快、收尾慢
     const e = 1 - (1 - t) ** 3
@@ -136,7 +170,11 @@ export function sweepBackToFolders(onCover: () => void) {
   window.setTimeout(
     () => {
       if (!host.isConnected) return
-      if (!swapped) onCover()
+      if (!swapped) {
+        swapped = true
+        onCover()
+      }
+      release()
       stopFrames(step)
       host.remove()
       running = false

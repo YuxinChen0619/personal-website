@@ -10,12 +10,35 @@ import {
   type SceneState,
   CAPABILITIES,
 } from './experience/experienceMachine'
+import type { ExperienceId } from './data/experience'
 
 /** 主场景之上叠加的模态层 */
 export type Overlay = null | 'about' | 'skills' | 'work' | 'contact'
 
 /** SELECTED WORK 内部的子视图 */
-export type WorkView = null | 'design' | 'photograph' | 'video' | 'website' | 'strategy'
+export type WorkView = null | 'design' | 'photography' | ExperienceId
+export type WorkOrigin = 'folders' | 'experience'
+
+/** Experience 返回详情页后重建 Three.js 场景所需的完整位置状态。 */
+export type ExperienceSceneSnapshot = {
+  scrollProgress: number
+  loopCounter: number
+  sceneOffsetX: number
+  singleSheetOffsetX: number
+  activeStation: number | null
+  cameraGroupPosition: [number, number, number]
+  cameraGroupQuaternion: [number, number, number, number]
+}
+
+export const INITIAL_EXPERIENCE_SCENE_SNAPSHOT: ExperienceSceneSnapshot = {
+  scrollProgress: 0,
+  loopCounter: 1,
+  sceneOffsetX: 0,
+  singleSheetOffsetX: 0,
+  activeStation: null,
+  cameraGroupPosition: [0, 0, 0],
+  cameraGroupQuaternion: [0, 0, 0, 1],
+}
 
 /**
  * 旧的三段式阶段。
@@ -39,6 +62,8 @@ type State = {
   progress: number
   overlay: Overlay
   workView: WorkView
+  workOrigin: WorkOrigin
+  experienceSceneSnapshot: ExperienceSceneSnapshot
 
   /** 往状态机投一个事件；这是推进场景的**唯一**方式 */
   send: (e: SceneEvent) => void
@@ -50,6 +75,10 @@ type State = {
   openOverlay: (o: Overlay, source?: OverlaySource) => void
   closeOverlay: () => void
   setWorkView: (v: WorkView) => void
+  setWorkOrigin: (origin: WorkOrigin) => void
+  setExperienceSceneSnapshot: (snapshot: ExperienceSceneSnapshot) => void
+  openExperienceWork: (view: ExperienceId, snapshot: ExperienceSceneSnapshot) => void
+  returnFromWork: () => void
 }
 
 export const useStore = create<State>((set, get) => ({
@@ -58,6 +87,8 @@ export const useStore = create<State>((set, get) => ({
   progress: 0,
   overlay: null,
   workView: null,
+  workOrigin: 'folders',
+  experienceSceneSnapshot: INITIAL_EXPERIENCE_SCENE_SNAPSHOT,
 
   /**
    * 往状态机投事件，并把「浮层什么时候真正挂上 / 卸掉」跟着状态走。
@@ -131,6 +162,21 @@ export const useStore = create<State>((set, get) => ({
   },
 
   setWorkView: (workView) => set({ workView }),
+  setWorkOrigin: (workOrigin) => set({ workOrigin }),
+  setExperienceSceneSnapshot: (experienceSceneSnapshot) => set({ experienceSceneSnapshot }),
+  openExperienceWork: (workView, experienceSceneSnapshot) => {
+    set({ workOrigin: 'experience', experienceSceneSnapshot })
+    get().openOverlay('work')
+    set({ workView })
+  },
+  returnFromWork: () => {
+    if (get().workOrigin === 'experience') {
+      set({ workView: null })
+      get().openOverlay('skills')
+      return
+    }
+    set({ workView: null })
+  },
 }))
 
 /** 当前状态允许哪些输入：状态机那张输入规则表的读取入口。
